@@ -143,20 +143,6 @@ def main():
     
     site = 7
     densities = density_of_states(eigen, coeffis, site, output=False)
-    
-    plt.plot(np.arange(eigen[0][0],eigen[0][-1]+0.2,0.001), densities)
-    plt.xlabel('energy in E/t')
-    plt.ylabel('LDOS')
-    plt.title('Local density of states at site '+str(site)+' of '+ str(sites_x)+'x'+str(sites_y))
-    plt.grid()
-    # plt.savefig('ldos_'+str(sites_x)+'x'+str(sites_y)+'_'+str(site)+'.png')
-    plt.show()
-
-    # gap_equation = selfconsistency(eigen, attract, coeffis, output=True) #depends on system parameters, but not on the actual state
-
-    # plt.plot(gap_equation)
-    # plt.grid()
-    # plt.show()
 
     return True 
 
