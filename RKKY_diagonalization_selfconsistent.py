@@ -8,9 +8,10 @@ def diagonalize_hamiltonian(parameters, spin, positions = [], output=False):
     sites_x, sites_y, mu, cps, tri, gamma, rkky, imp1, imp2 = parameters
     hopping = 1
 
-    attract = [cps]*sites_x*sites_y
-    attract_tri_up = [tri]*sites_x*sites_y
-    attract_tri_down = [tri]*sites_x*sites_y
+    attract = cps
+    attract_tri_up = tri[0]
+    attract_tri_down = tri[1]
+    
     if len(positions) > 0:
         position = positions 
     else:
@@ -22,17 +23,25 @@ def diagonalize_hamiltonian(parameters, spin, positions = [], output=False):
     # basis: nambu; go through all sites in x-direction and do that for all k-values
     for k_y in k_values:
         data, row_index, column_index = [] ,[], []
-        SOC_ham = [-gamma*np.cos(k_y), gamma*np.sin(k_y), gamma*np.sin(k_y), gamma*np.cos(k_y), gamma*np.cos(k_y), -gamma*np.sin(k_y), -gamma*np.sin(k_y), -gamma*np.cos(k_y)]
-        off_diag_ham = [element *np.cos(k_y) for element in [-hopping, -hopping , hopping, hopping]]
+        SOC_local = [-2*gamma*np.sin(k_y), -2*gamma*np.sin(k_y)]
+        SOC_nn = [-gamma, gamma]
+        off_diag_ham = [2*element *np.cos(k_y) for element in [-hopping, -hopping , hopping, hopping]]
 
         for site in range(0, sites_x*4, 4):
+            attract_tri_ham = [attract_tri_up[site//4], -np.conj(attract_tri_down[site//4])]
                 
             #local interactions
-            data += [-mu, np.conj(attract[site//4]), -mu, -np.conj(attract[site//4]), attract[site//4], +mu , - attract[site//4], +mu]
+            ## chemical potential and singlet pairing
+            data += [-mu, np.conj(attract[site//4]), -mu, -np.conj(attract[site//4]), -attract[site//4], +mu , attract[site//4], +mu]
             row_index += [site]*2 + [site+1]*2 +[site+2]*2 + [site+3]*2
             column_index += [site, site+3] + [site+1, site+2] + [site+1, site+2] + [site, site+3]
+            # print(site, site+1, site+2, site+3, site+4)
+            ## SOC
+            data += SOC_local + [-element for element in SOC_local]
+            row_index += [site, site+1, site+2, site+3]
+            column_index += [site+1, site, site+3, site+2]
                         
-            #RKKY
+            #RKKY-interaction (local)
             if site//4 in position: 
                 # all c^dag c terms
                 current_spin = spin[position.index(site//4)%2]
@@ -46,35 +55,39 @@ def diagonalize_hamiltonian(parameters, spin, positions = [], output=False):
                                 
 
             #nearest neighbor hopping only, hard wall boundary conditions, 1D x-direction
-            if site//4 != sites_x-1:
-                #hopping to higher neighbor
-                data += off_diag_ham + [attract_tri_up[site//4], attract_tri_down[site//4],-np.conj(attract_tri_up[site//4]), -np.conj(attract_tri_down[site//4])]
+            if site//4 != sites_x-1: 
+                #to higher neighbor 
+                # hopping and triplet pairing
+                data += off_diag_ham + [attract_tri_up[site//4], attract_tri_down[site//4],-np.conj(attract_tri_up[site//4]), -np.conj(attract_tri_down[site//4])]# attract_tri_ham + [-np.conj(element) for element in attract_tri_ham]
                 row_index += [site, site+1, site+2, site+3] * 2
                 column_index += [site+4, site+4+1, site+4+2, site+4+3] + [site+4+2, site+4+3, site+4, site+4+1]
-                data += SOC_ham
-                row_index += [site]*2 + [site+1]*2 + [site+2] *2 + [site+3]*2
-                column_index += [site+4, site+4+1] + [site+4, site+4+1] + [site+4+2,site+4+3] + [site+4+2, site+4+3]
+                #SOC
+                data += SOC_nn + [-element for element in SOC_nn]
+                row_index += [site, site+1, site+2, site+3]
+                column_index += [site+4+1, site+4, site+4+3, site+4+2]
 
-                if len(data) != len(row_index) or len(data) != len(column_index):
-                    print(len(data), len(row_index), len(column_index))
+                # if len(data) != len(row_index) or len(data) != len(column_index):
+                    # print(len(data), len(row_index), len(column_index))
                 
             if (site - 4) >=0:
-                #hopping to lower neighbor
-                data += off_diag_ham + [np.conj(attract_tri_up[site//4]), np.conj(attract_tri_down[site//4]),-attract_tri_up[site//4], -attract_tri_down[site//4]]
+                #to lower neighbor
+                # hopping and triplet pairing
+                data += off_diag_ham + [np.conj(attract_tri_up[site//4]), np.conj(attract_tri_down[site//4]),-attract_tri_up[site//4], -attract_tri_down[site//4]]# [np.conj(element) for element in attract_tri_ham] +[-element for element in attract_tri_ham]
                 row_index += [site, site+1, site+2, site+3] * 2
                 column_index += [site-4, site-4+1, site-4+2, site-4+3]  + [site-4+2, site-4+3, site-4, site-4+1]
-                data += SOC_ham
-                row_index += [site]*2 + [site+1]*2 + [site+2] *2 + [site+3]*2
-                column_index += [site-4, site-4+1] + [site-4, site-4+1] + [site-4+2,site-4+3] + [site-4+2, site-4+3]
+                #SOC
+                data += [-entry for entry in SOC_nn + [-element for element in SOC_nn]]
+                row_index += [site, site+1, site+2, site+3]
+                column_index += [site-4+1, site-4, site-4+3, site-4+2]
                                 
             else:
                 continue
         
-        # print(sp.sparse.csr_matrix((data, (row_index, column_index))).todense().shape)
+        # print(sp.sparse.csr_matrix(([round(element.real, 2) for element in data], (row_index, column_index))).todense())
         eigen.append(np.linalg.eigh(sp.sparse.csr_matrix((data, (row_index, column_index))).todense()))  #look for intel version 
 
-    if output:
-        print('__hamiltonian__\n diagonalized ')
+    # if output:
+        # print('__hamiltonian__\n diagonalized ')
 
     return eigen
 
