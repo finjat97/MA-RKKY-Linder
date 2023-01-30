@@ -335,3 +335,20 @@ def zero_LDOS_gap(parameters, density, eigen, step):
             gap_D.append(0)
     
     return gap_D
+
+def distance(parameters, positive_kvalues, zero_kvalues):
+
+    spin = [[[0,1/2,0],[0,1/2,0]],[[0,1/2,0],[0,-1/2,0]]]
+    F_upup, F_updown, distances = [], [], []
+
+    for pos2 in np.arange(4,parameters[0]-3):
+        eigen_upup = H_diag.diagonalize_hamiltonian(parameters, spin[0], positions=[4,pos2])
+        eigen_updown = H_diag.diagonalize_hamiltonian(parameters, spin[1], positions=[4,pos2])
+        F_upup.append(o.free_energy(eigen_upup, [positive_kvalues, zero_kvalues], output=False))
+        F_updown.append(o.free_energy(eigen_updown, [positive_kvalues, zero_kvalues], output=False))
+        distances.append(pos2-4)
+
+
+    F_difference =list(map(lambda x,y: x-y , F_upup, F_updown))
+
+    return F_difference, distances
