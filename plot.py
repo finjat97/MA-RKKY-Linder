@@ -154,3 +154,11 @@ def analytical_vs_numerical(data_a, data_n, parameters_a, parameters_n, spin_con
     # plt.show()
 
     return True
+
+def test(x_values, y_values, details):
+
+    plt.plot(y_values, x_values)
+    plt.grid()
+    plt.show()
+
+    return True
