@@ -1,0 +1,132 @@
+\newpage
+\section{Spin structure of the effective Hamiltonian}\label{app:spinstructure}
+The spin structure is the same for all four terms coming from the commutator $[S,H_{RKKY}]$, therefore only one general calculation is performed explicitly.
+For the individual cases of the pre-factors in the commutator in App. \ref{app:commutator2}, the corresponding energy terms of the form $(w^*_1  w_2)/(E_1-E_2)$ have to be factored in.
+\begin{align} \nonumber
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda' \\ \sigma, \sigma', \alpha, \alpha'}} &\left( T_{\substack{j,q,q', \beta, \beta'}}^{\alpha, \alpha', \gamma} \right) \left(T^{\sigma, \sigma', \gamma}_{i,k, k', \lambda, \lambda'}\right) \\ \nonumber
+   =\sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda' \\ \sigma, \sigma', \alpha, \alpha'}} i&\left( \frac{J}{N}\right)^2 \frac{e^{i(k-k')r_i}}{2\sqrt{|\gamma(k)|\,|\gamma(k')|}}\frac{e^{i(q-q')r_i}}{2\sqrt{|\gamma(q)|\,|\gamma(q')|}} \left( \Vec{S}_i\Vec{\sigma}_{\sigma,\sigma'} \right)\left( \Vec{S}_j\Vec{\sigma}_{\alpha,\alpha'} \right)\\\nonumber
+   &\times e^{-i(\phi(k)-\delta_{\sigma,\uparrow} \phi(k)-\phi(k')+\delta_{\sigma',\uparrow} \phi(k'))}\, e^{-i(\phi(q)-\delta_{\alpha,\uparrow} \phi(q)-\phi(q')+\delta_{\alpha',\uparrow} \phi(q'))} \\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} + \sigma' \delta_{\lambda,+}\delta_{\lambda',-}+ \sigma\delta_{\lambda,-}\delta_{\lambda',+}+\sigma \sigma'\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} + \alpha' \delta_{\beta,+}\delta_{\beta',-}+ \alpha\delta_{\beta,-}\delta_{\beta',+}+\alpha \alpha'\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|+ \lambda\sigma \gamma_z(k)}\sqrt{|\gamma(k')|+ \lambda'\sigma' \gamma_z(k')}\sqrt{|\gamma(q)|+\beta\alpha \gamma_z(q)}\sqrt{|\gamma(q')|+ \beta'\alpha' \gamma_z(q')}
+\end{align}
+For readability, $E^{ij}_0 = i\left(\frac{J}{N}\right)^2 \frac{e^{i(k-k')r_i}}{2\sqrt{|\gamma(k)|\,|\gamma(k')|}}\frac{e^{i(q-q')r_i}}{2\sqrt{|\gamma(q)|\,|\gamma(q')|}}$ is defined, since the summation over the positions of the impurity spins $i,j$ is going to be performed last.\newline
+
+In the case of $\alpha = \sigma$ and $\alpha'=\sigma'$, four terms result out of this expression: \newline
+for $(\sigma, \sigma') =(\uparrow, \uparrow)$
+\begin{align} \label{eq:spinstruct_a}
+   \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 \left(S_{i,z} S_{j,z}\right) \\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} + \delta_{\lambda,+}\delta_{\lambda',-}+ \delta_{\lambda,-}\delta_{\lambda',+}+\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} + \delta_{\beta,+}\delta_{\beta',-}+ \delta_{\beta,-}\delta_{\beta',+}+\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|+ \lambda\gamma_z(k)}\sqrt{|\gamma(k')|+ \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|+ \beta\gamma_z(q)}\sqrt{|\gamma(q')|+ \beta'\gamma_z(q')}
+\end{align}
+for $(\sigma, \sigma') =(\downarrow, \downarrow)$
+\begin{align}\label{eq:spinstruct_b}
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 e^{-i(\phi(k)-\phi(k')+\phi(q)-\phi(q'))}\left(S_{i,z} S_{j,z}\right) \\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} - \delta_{\lambda,+}\delta_{\lambda',-}- \delta_{\lambda,-}\delta_{\lambda',+}+\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} - \delta_{\beta,+}\delta_{\beta',-}- \delta_{\beta,-}\delta_{\beta',+}+\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|-\lambda\gamma_z(k)}\sqrt{|\gamma(k')|-\lambda'\gamma_z(k')}\sqrt{|\gamma(q)|-\beta\gamma_z(q)}\sqrt{|\gamma(q')|-\beta'\gamma_z(q')}
+\end{align}
+for $(\sigma, \sigma') =(\uparrow, \downarrow)$
+\begin{align}
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 e^{-i(-\phi(k')-\phi(q'))} \left(S_{i,x}-iS_{i,y}\right) \left( S_{j,x}-iS_{j,y}\right) \\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} + \delta_{\lambda,+}\delta_{\lambda',-}- \delta_{\lambda,-}\delta_{\lambda',+}-\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} + \delta_{\beta,+}\delta_{\beta',-}- \delta_{\beta,-}\delta_{\beta',+}-\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|+ \lambda\gamma_z(k)}\sqrt{|\gamma(k')|-\lambda'\gamma_z(k')}\sqrt{|\gamma(q)|+ \beta\gamma_z(q)}\sqrt{|\gamma(q')|-\beta'\gamma_z(q')}
+\end{align}
+for $(\sigma, \sigma') =(\downarrow, \uparrow)$
+\begin{align}
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 e^{-i(\phi(k)+\phi(q))} \left(S_{i,x}+iS_{i,y}\right) \left( S_{j,x}+iS_{j,y}\right) \\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} -\delta_{\lambda,+}\delta_{\lambda',-}+ \delta_{\lambda,-}\delta_{\lambda',+}-\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} - \delta_{\beta,+}\delta_{\beta',-}+ \delta_{\beta,-}\delta_{\beta',+}-\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|-\lambda\gamma_z(k)}\sqrt{|\gamma(k')|+ \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|-\beta\gamma_z(q)}\sqrt{|\gamma(q')|+ \beta'\gamma_z(q')}
+\end{align}
+In the case of $\alpha = - \sigma$ and $\alpha' = -\sigma'$, there are another four terms resulting from the general expression: \newline
+for $(\sigma, \sigma') = (\uparrow, \uparrow)$
+\begin{align}
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 e^{-i(\phi(q)-\phi(q'))} \left(-S_{i,z} S_{j,z}\right) \\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} + \delta_{\lambda,+}\delta_{\lambda',-}+ \delta_{\lambda,-}\delta_{\lambda',+}+\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} - \delta_{\beta,+}\delta_{\beta',-}- \delta_{\beta,-}\delta_{\beta',+}+\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|+ \lambda\gamma_z(k)}\sqrt{|\gamma(k')|+ \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|-\beta\gamma_z(q)}\sqrt{|\gamma(q')|-\beta'\gamma_z(q')}
+\end{align}
+for $(\sigma, \sigma') =(\downarrow, \downarrow)$
+\begin{align}
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 e^{-i(\phi(k)-\phi(k'))}\left(-S_{i,z} S_{j,z}\right) \\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} - \delta_{\lambda,+}\delta_{\lambda',-}- \delta_{\lambda,-}\delta_{\lambda',+}+\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} + \delta_{\beta,+}\delta_{\beta',-}+ \delta_{\beta,-}\delta_{\beta',+}+\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|-\lambda \gamma_z(k)}\sqrt{|\gamma(k')|-\lambda'\gamma_z(k')}\sqrt{|\gamma(q)|+ \beta\gamma_z(q)}\sqrt{|\gamma(q')|+ \beta'\gamma_z(q')}
+\end{align}
+for $(\sigma, \sigma') =(\uparrow, \downarrow)$
+\begin{align}
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 e^{-i(-\phi(k')+\phi(q))} \left(S_{i,x}-iS_{i,y}\right)\left( S_{j,x}+iS_{j,y}\right) \\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} + \delta_{\lambda,+}\delta_{\lambda',-}- \delta_{\lambda,-}\delta_{\lambda',+}-\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} - \delta_{\beta,+}\delta_{\beta',-}+ \delta_{\beta,-}\delta_{\beta',+}-\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|+ \lambda\gamma_z(k)}\sqrt{|\gamma(k')|-\lambda'\gamma_z(k')}\sqrt{|\gamma(q)|-\beta\gamma_z(q)}\sqrt{|\gamma(q')|+ \beta'\gamma_z(q')}
+\end{align}
+for $(\sigma, \sigma') =(\downarrow, \uparrow)$
+\begin{align}
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 e^{-i(\phi(k)-\phi(q'))} \left(S_{i,x}+iS_{i,y}\right)\left( S_{j,x}-iS_{j,y}\right) \\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} - \delta_{\lambda,+}\delta_{\lambda',-}+ \delta_{\lambda,-}\delta_{\lambda',+}-\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} + \delta_{\beta,+}\delta_{\beta',-}- \delta_{\beta,-}\delta_{\beta',+}-\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|-\lambda\gamma_z(k)}\sqrt{|\gamma(k')|+ \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|+ \beta\gamma_z(q)}\sqrt{|\gamma(q')|-\beta'\gamma_z(q')}
+\end{align}
+In the case of $\alpha = \alpha'$ and $\sigma = -\sigma'$, there are another four terms resulting from the general expression: \newline
+for $\alpha = \uparrow$ and $(\sigma, \sigma') =(\uparrow, \downarrow)$
+\begin{align}
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} & E^{ij}_0 e^{-i(-\phi(k'))}  \left(S_{i,z}\right) \left( S_{j,x}-iS_{j,y}\right)\\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} - \delta_{\lambda,+}\delta_{\lambda',-}+ \delta_{\lambda,-}\delta_{\lambda',+}-\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} + \delta_{\beta,+}\delta_{\beta',-}+ \delta_{\beta,-}\delta_{\beta',+}+\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|+ \lambda\gamma_z(k)}\sqrt{|\gamma(k')|- \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|+ \beta\gamma_z(q)}\sqrt{|\gamma(q')|+ \beta'\gamma_z(q')}
+\end{align}
+for $\alpha = \uparrow$ and $(\sigma, \sigma') =(\downarrow, \uparrow)$
+\begin{align} 
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda' }} &E^{ij}_0 e^{-i(\phi(k))} \left( S_{i,z}\right) \left( S_{j,x}+ iS_{j,y} \right)\\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} + \delta_{\lambda,+}\delta_{\lambda',-} -\delta_{\lambda,-}\delta_{\lambda',+}- \delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} + \delta_{\beta,+}\delta_{\beta',-}+ \delta_{\beta,-}\delta_{\beta',+}+ \delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|- \lambda \gamma_z(k)}\sqrt{|\gamma(k')|+ \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|+\beta \gamma_z(q)}\sqrt{|\gamma(q')|+ \beta'\gamma_z(q')}
+\end{align}
+for $\alpha = \downarrow$ and $(\sigma, \sigma') =(\uparrow, \downarrow)$
+\begin{align}
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} & E^{ij}_0 e^{-i(-\phi(k')+\phi(q)-\phi(q'))}  \left( -S_{i,z}\right) \left( S_{j,x}-iS_{j,y}\right)\\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} - \delta_{\lambda,+}\delta_{\lambda',-}+ \delta_{\lambda,-}\delta_{\lambda',+}-\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} - \delta_{\beta,+}\delta_{\beta',-}- \delta_{\beta,-}\delta_{\beta',+}+\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|+ \lambda\gamma_z(k)}\sqrt{|\gamma(k')|- \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|- \beta\gamma_z(q)}\sqrt{|\gamma(q')|- \beta'\gamma_z(q')}
+\end{align}
+
+for $\alpha = \downarrow$ and $(\sigma, \sigma') =(\downarrow, \uparrow)$
+\begin{align} 
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda' }} &E^{ij}_0 e^{-i(\phi(k)+\phi(q)-\phi(q'))}  \left( -S_{i,z}\right) \left( S_{j,x}+ iS_{j,y} \right)\\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} + \delta_{\lambda,+}\delta_{\lambda',-} -\delta_{\lambda,-}\delta_{\lambda',+}- \delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} - \delta_{\beta,+}\delta_{\beta',-}- \delta_{\beta,-}\delta_{\beta',+}+ \delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|- \lambda \gamma_z(k)}\sqrt{|\gamma(k')|+ \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|-\beta \gamma_z(q)}\sqrt{|\gamma(q')|- \beta'\gamma_z(q')}
+\end{align}
+
+In the case of $\sigma = \sigma'$ and $ \alpha = - \alpha'$, another four terms result from the general expression: \newline
+for $\sigma = \uparrow$ and $(\alpha, \alpha') =(\downarrow, \uparrow)$
+\begin{align} 
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 e^{-i(\phi(q))} \left(S_{i,x}+iS_{i,y} \right) \left( S_{j,z} \right)\\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} +  \delta_{\lambda,+}\delta_{\lambda',-}+ \delta_{\lambda,-}\delta_{\lambda',+} +\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} + \delta_{\beta,+}\delta_{\beta',-} -\delta_{\beta,-}\delta_{\beta',+} -\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|+ \lambda \gamma_z(k)}\sqrt{|\gamma(k')|+ \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|-\beta\gamma_z(q)}\sqrt{|\gamma(q')|+ \beta'\gamma_z(q')}
+\end{align}
+for $\sigma = \uparrow$ and $(\alpha, \alpha') =(\uparrow, \downarrow)$
+\begin{align} 
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 e^{-i(-\phi(q'))} \left(S_{i,x}-iS_{i,y} \right) \left( S_{j,z} \right)\\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} +\delta_{\lambda,+}\delta_{\lambda',-}+\delta_{\lambda,-}\delta_{\lambda',+}+\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} -\delta_{\beta,+}\delta_{\beta',-}+ \delta_{\beta,-}\delta_{\beta',+} -\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|+ \lambda\gamma_z(k)}\sqrt{|\gamma(k')|+ \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|+\beta\gamma_z(q)}\sqrt{|\gamma(q')|- \beta'\gamma_z(q')}
+\end{align}
+for $\sigma = \downarrow$ and $(\alpha, \alpha') =(\downarrow, \uparrow)$
+\begin{align} 
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda'}} &E^{ij}_0 e^{-i(\phi(k)-\phi(k')+\phi(q))} \left(S_{i,x}+iS_{i,y} \right) \left( -S_{j,z} \right)\\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} -\delta_{\lambda,+}\delta_{\lambda',-} -\delta_{\lambda,-}\delta_{\lambda',+} +\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} + \delta_{\beta,+}\delta_{\beta',-} -\delta_{\beta,-}\delta_{\beta',+} -\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|- \lambda \gamma_z(k)}\sqrt{|\gamma(k')|- \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|-\beta \gamma_z(q)}\sqrt{|\gamma(q')|+ \beta'\gamma_z(q')}
+\end{align}
+for $\sigma = \downarrow$ and $(\alpha, \alpha') =(\uparrow, \downarrow)$
+\begin{align} 
+    \sum_{\substack{i, j, q,q', k, k'\\ \beta, \beta', \lambda, \lambda' }} &E^{ij}_0 e^{-i(\phi(k)-\phi(k')-\phi(q'))} \left(S_{i,x}-iS_{i,y} \right) \left( -S_{j,z} \right)\\ \nonumber
+   &\times \left( \delta_{\lambda,+}\delta_{\lambda',+} - \delta_{\lambda,+}\delta_{\lambda',-} -\delta_{\lambda,-}\delta_{\lambda',+} +\delta_{\lambda,-}\delta_{\lambda',-}\right)\\\nonumber
+   &\times \left( \delta_{\beta,+}\delta_{\beta',+} -\delta_{\beta,+}\delta_{\beta',-} +\delta_{\beta,-}\delta_{\beta',+} -\delta_{\beta,-}\delta_{\beta',-}\right)\\\nonumber
+   &\times \sqrt{|\gamma(k)|- \lambda\gamma_z(k)}\sqrt{|\gamma(k')|- \lambda'\gamma_z(k')}\sqrt{|\gamma(q)|+\beta \gamma_z(q)}\sqrt{|\gamma(q')|- \beta' \gamma_z(q')}
+\end{align}

@@ -1,0 +1,39 @@
+\subsection{RKKY as Perturbation}
+The fermionic, itinerant spins in the non-centrosymmetric superconductor described above are able to interact locally with impurities spins, which leads to the RKKY interaction between the impurity spins.
+This interaction is introduced in Sec. \ref{sec:RKKY} and is of second order in perturbation theory.
+Therefore the local spin-interaction term
+% \begin{equation}\label{eq:RKKYhamiltonian}
+%     H_{RKKY} = J \sum_i \vb{S}_i \vb{s}_i
+% \end{equation}
+% is going to be treated as a perturbation to the system.
+% The classical spin $\vb{S}_i$ describes a local spin-1/2-impurity placed at position $\vb{r}_i$, while $\vb{s}_i$ is the quantum-mechanical spin-operator for the mobile spins.
+% The summation runs over all impurity spin positions and the interaction strength $J$ is assumed to be constant. \newline
+% The spin-operator is represented by
+% \begin{align}
+%     \vb{s}_i &= \sum_{\sigma, \sigma'} \Vec{\sigma}_{\sigma, \sigma'} c^{\dag}_{i,\sigma}c_{i,\sigma'}
+% \end{align}
+% and can be Fourier-transformed.
+% The perturbation term therefore becomes
+
+\begin{equation} \nonumber
+    H_{RKKY} = \sum_{\sigma, \sigma', k, k'} \sum_i \frac{J}{N}e^{i(k-k')r_i}(\vb{S}_i\cdot \Vec{\sigma}_{\sigma, \sigma'})c^{\dag}_{k,\sigma}c_{k',\sigma'}
+\end{equation}
+is treated as a perturbation to the system and firstly is transformed into helicity basis by means of Eq. \eqref{eq:helicitytrafo}:
+\begin{align} \nonumber
+    H_{RKKY} &= \sum_{k, k', i, \lambda, \lambda'} T^{ \gamma}_{i, k, k', \lambda, \lambda'} b^{\dag}_{k,\lambda}b_{k',\lambda'}
+\end{align}
+where $T_{\gamma, k, k', i, \lambda, \lambda'}$ contains all pre-factors. 
+The exact expression for $T$ can be found in App. \ref{app:basistrafo}.\newline
+After another transformation using Equation \eqref{eq:d_basis_def}, the RKKY-interaction reads in the eigenbasis of the unperturbed Hamiltonian: 
+\begin{align}
+    &H_{RKKY} = \sum_{i, k, k',\lambda, \lambda'} T^{ \gamma}_{i, k, k', \lambda, \lambda'} \\ \nonumber 
+    &\left(
+    \eta^{\dag}_{k, \lambda}\eta_{k',\lambda'} d^{\dag}_{k,\lambda}d_{k',\lambda'}
+    + \nu_{k,\lambda} \nu^{\dag}_{k',\lambda'} d_{-k,\lambda}d^{\dag}_{-k',\lambda'}
+    - \nu_{k,\lambda}\eta_{k',\lambda'} d_{-k,\lambda}d_{k',\lambda'} 
+    - \eta^{\dag}_{k,\lambda} \nu^{\dag}_{k',\lambda'} d^{\dag}_{k,\lambda}d^{\dag}_{-k',\lambda'} \right)
+\end{align}
+The interaction between impurity spins and superconductor aka. itinerant spins is approximated to be into one direction only. 
+The changes within the superconductor because of the impurities is neglected and only the influence of the superconducting environment onto the configuration of the impurity spins is investigated.
+This simplification can be justified by the low density of impurity spins in the superconducting system.
+

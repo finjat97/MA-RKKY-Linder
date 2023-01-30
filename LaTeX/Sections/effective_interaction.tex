@@ -1,0 +1,108 @@
+\section{Effective Interaction} \label{sec:eff_interaction}
+In order to obtain the Hamiltonian describing the effective interaction of the system including the perturbation, a Schrieffer-Wolff-transformation is applied.
+Following the procedure as explained in Sec. \ref{sec:SchriefferWolff}, the commutator $[S,H_0]$ is computed using the ansatz:
+\begin{align} \label{eq:ansatzSWT}
+    S = \sum_{\substack{i,k,k'\\ \lambda, \lambda'}} &\left(  A_{\substack{i,k,k'\\ \lambda, \lambda'}} ^{\gamma} d^{\dag}_{k,\lambda} d_{k', \lambda'}+ B_{\substack{i,k,k'\\ \lambda, \lambda'}} ^{\gamma} d_{-k,\lambda} d^{\dag}_{-k', \lambda'} \right.
+    \left.+ C_{\substack{i,k,k'\\ \lambda, \lambda'}} ^{\gamma} d_{-k,\lambda} d_{k', \lambda'}+ D_{\substack{i,k,k'\\ \lambda, \lambda'}} ^{\gamma} d^{\dag}_{k,\lambda} d^{\dag}_{-k', \lambda'} \right)
+\end{align}
+
+Afterwards, the requirement $H_{RKKY} + i[S,H_0]=0$ is applied to it. 
+The calculation can be found in Appendix \ref{app:commutator1} and leads to the following coefficients:
+\begin{align}\nonumber
+    A_{\substack{i, k,k'\\ \lambda, \lambda'}} ^{\gamma} &= i \sum_i T ^{\gamma}_{i,k,k', \lambda, \lambda'} \frac{\eta^{\dag}_{k,\lambda} \eta_{k',\lambda'}}{E_{k,\lambda} - E_{k', \lambda'}}\\ \nonumber
+    B_{\substack{i, k,k'\\ \lambda, \lambda'}} ^{\gamma} &= -i \sum_i T ^{\gamma}_{i,k,k', \lambda, \lambda'} \frac{\nu_{k,\lambda} \nu^{\dag}_{k',\lambda'}}{E_{-k, \lambda}-E_{-k',\lambda'} }\\ \nonumber
+    C_{\substack{i, k,k'\\ \lambda, \lambda'}} ^{\gamma} &= -i \sum_i T ^{\gamma}_{i,k,k', \lambda, \lambda'} \frac{\nu_{k,\lambda} \eta_{k',\lambda'}}{E_{-k,\lambda} + E_{k', \lambda'}}\\ \label{eq:SWT_result}
+    D_{\substack{i, k,k'\\ \lambda, \lambda'}} ^{\gamma} &= i \sum_i T ^{\gamma}_{i,k,k', \lambda, \lambda'} \frac{\eta^{\dag}_{k,\lambda} \nu^{\dag}_{k',\lambda'}}{E_{k,\lambda} + E_{-k', \lambda'}}
+\end{align}
+Based on that, the commutator $[S, H_{RKKY}]$ is calculated as shown in Appendix \ref{app:commutator2} and the effective Hamiltonian is formulated.
+
+The expectation value of the effective Hamiltonian $H_{eff} = H_0 -i[S, H_{RKKY}]$ is presented in Appendix \ref{app:expectationvalue}. \newline
+The effective Hamiltonian contains terms of different spin-structures as well as feedback terms between the impurity spins and the superconductor.
+Since the density of impurity spins in the system is chosen to be very low, the feedback between them and the superconductor is neglected. \newline
+The different spin-structures originate from the factors $A, B, C, D$ and $T$, since they contain the product $\vb{S}_i \cdot \Vec{\sigma}_{\sigma,\sigma'}$ with $\sigma$ being a spin index again.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Bound states}
+In d-wave superconductors, there are bound states at impurities to be expected \cite{balatsky2006impurity}. \newline
+in p-wave superconductors, YSR bound states are to be expected \cite{kim2015impurity}, original paper from Shiba that talks about classical spins in superconductors \cite{shiba1968classical} \newline
+spin glass vs. superconductivity investigates the influence of RKKY interaction onto superconducting transition and gap \cite{galitski2002spin} \newline
+
+\textcolor{red}{explain.}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Spin Structure} \label{sec:eff_interaction_spin}
+The spin structure of the expectation value of the effective Hamiltonian is determined in order to allow for statements about the preferred spin configuration of the impurity spins.
+Since all terms contain factors of the type $\Lambda_{\substack{j, q,q'\\ \beta, \beta'}}^{\gamma} T ^{\gamma}_{i,k,k', \lambda, \lambda'}$, where $\Lambda = A,B,C,D$, the individual parameter combinations for helicity and momentum are going to determine the effective spin-structure. \newline
+While the spin-structure for a simple normal metal with RRKY is of Heisenberg- type, it gets more complicated with more included interactions.
+For a conventional superconductor without SOC but with spin-splitting due to an external magnetic field, a mixture of Ising and Heisenberg like spin-terms is present \cite{ghanbari_rkky_nodate}.
+For a normal metal with SOC of Rashba-type, the spin-structure contains Heisenberg and Dzyaloshinskii–Moriya like spin-interactions as well as interactions of type $\vb{S}_i \cdot \overleftrightarrow{\Gamma} \vb{S}_i$ \cite{valizadeh_mohammad_m_magnetic_2017}.
+Therefore it is possible that the spin-structure for a non-centrosymmetric superconductor is a combination of Heisenberg, Ising, Dzyaloshinskii–Moriya and tensor-product like terms. \newline
+As the transformation between spin- and helicity-basis in Eq. \eqref{eq:helicitytrafo} shows does each helicity-basis operator contain a spin-up and a spin-down operator regardless of their helicity.
+Consequently, all spin-combinations are possible in the first place and are weighted and canceled solely based on the energy terms associated with them as well as the choice of SOC and dependencies of momenta to each other. \newline
+Evaluating the expression of the commutator $[S,H_{RKKY}]$ leads to two distinct possible parameter combinations for helicity and momentum:
+\begin{align}\nonumber
+    (1st) \quad (k, \lambda)( k', \lambda') \quad &\text{with} \quad (k', \lambda')(k,\lambda)\\\nonumber
+    (2nd) \quad (k,\lambda)( k', \lambda')\quad &\text{with} \quad (-k,\lambda)(-k',\lambda')
+\end{align}
+In order to determine the effective spin structure of the non-centrosymmetric superconductor with RKKY-interaction, each of terms in $\langle H_{eff} \rangle$ (Eq. \eqref{app:effective_expectationvalue}) has to be evaluated individually.
+% It is possible to formulated a general expression for the two different parameter sets
+% \begin{align} \nonumber
+%     T_{\substack{i,k,k'\\ \lambda, \lambda'}} T_{\substack{j,q,q' \\ \beta, \beta'}}(f(E_{1,\lambda}) - f(E_{2,\lambda'} + a) x_{1,\lambda}x_{2,\lambda'}x_{3,\lambda}x_{4,\lambda'} \frac{1}{E_{1,\lambda'} - E_{2,\lambda}} \equiv T_{i,k,k',\lambda, \lambda'} T_{j,q,q', \beta, \beta'} \Tilde{E}_{k,k', \lambda, \lambda'}
+% \end{align}
+% There is no need to specify dependencies on $q,q', \beta, \beta'$ since those are replaced by $k,k', \lambda, \lambda'$ in the actual expressions due to the $\delta$-functions that arise from the anti-commutation relations and expectation value. \newline
+The resulting spin structure contains Heisenberg, DM and Ising terms, which are labeled in accordance with Sec. \ref{sec:RKKY_SOC}.
+% can be expressed in the form derived by Mohammad \cite{valizadeh_mohammad_m_magnetic_2017}, who identified Heisenberg, Dzyaloshinskii-Moriya and Ising like contribution to the spin structure of a two dimensional electron gas with SOC as presented in Eq. \ref{eq:spinstructure_mohammad}. \newline
+The coefficients $\vb{J}, \vb{D}, \overleftrightarrow{\Gamma}$ for $\langle H_{eff} \rangle$ in the non-centrosymmetric superconductor with RKKY-interaction are found to be
+\begin{align}\label{eq:eff_spin_1}
+    \vb{J}_1 &= \sum_{i,j,k,k'} \frac{1}{2}\left(\frac{J}{N}\right)^2 e^{i(k-k')(r_i-r_j)}\left( 
+    \begin{array}{c}
+         F^{k,k'}_{+,+} +  F^{k,k'}_{-,-} +  F^{k,k'}_{+,-} +  F^{k,k'}_{-,+}\\
+          F^{k,k'}_{+,+} +  F^{k,k'}_{-,-} -  F^{k,k'}_{+,-} -  F^{k,k'}_{-,+}\\
+         -2 ( F^{k,k'}_{+,-} +  F^{k,k'}_{-,+})
+    \end{array}
+    \right) \\ \nonumber
+    \vb{D}_1 &= \sum_{i,j,k,k'} \frac{1}{2}\left(\frac{J}{N}\right)^2 e^{i(k-k')(r_i-r_j)}\left( 
+    \begin{array}{c}
+        0\\
+         ( F^{k,k'}_{+,-} -  F^{k,k'}_{-,+})\left(\frac{\gamma_{k,x} + i \gamma_{k,y}}{|\gamma_k|} - \frac{\gamma_{k',x} - i \gamma_{k',y}}{|\gamma_k'|}\right)\\
+         0
+    \end{array}
+    \right) \\ \nonumber
+   \overleftrightarrow{\Gamma} &= 0
+\end{align}
+for the first parameter set.
+The energy terms $F^{k,k'}_{\pm, \pm}$ consist of the sum of all prefactor combinations that yield a non-zero contribution to $\langle H_{eff} \rangle$.
+They take the following form \textcolor{red}{Should I write it out at least once? -> that would probably make it easier to understand. Point out that this is the same as Eq. \eqref{eq:nm_soc_spinCoeffi} in the limit of $\Delta = 0$, which is important for validation. But I can not turn off SOC, since it is too deep entangled with everything and phase factors are overall.}\newline
+The second parameter set yields 
+\begin{align}
+     \vb{J}_2 &= \sum_{i,j,k,k'} \frac{1}{4}\left(\frac{J}{N}\right)^2 e^{i(k-k')(r_i-r_j)}\left( 
+    \begin{array}{c}
+        -\left[ (F^{k,k'}_{+,+} +  F^{k,k'}_{-,-}) \Theta_{+} + (\Tilde{F}^{k,k'}_{+,-} +  F^{k,k'}_{-,+}) \Theta_{-} \right] \\
+         -\left[ (F^{k,k'}_{+,+} +  F^{k,k'}_{-,-}) \Theta_{-} + (\Tilde{F}^{k,k'}_{+,-} +  F^{k,k'}_{-,+}) \Theta_{+} \right] \\
+         4 (F^{k,k'}_{+,-} +  F^{k,k'}_{-,+})
+    \end{array}
+    \right) \\ \nonumber
+    \vb{D}_2 &= \sum_{i,j,k,k'} \frac{1}{2}\left(\frac{J}{N}\right)^2 e^{i(k-k')(r_i-r_j)} \left( 
+    \begin{array}{c}
+        0\\
+         ( F^{k,k'}_{+,-} -  F^{k,k'}_{-,+})\left(\frac{\gamma_{k,x} - i \gamma_{k,y}}{|\gamma_k|} - \frac{\gamma_{k',x} + i \gamma_{k',y}}{|\gamma_k'|}\right)\\
+         0
+    \end{array}
+    \right) \\ \nonumber
+    {\Gamma}_{xy} &= {\Gamma}_{yx} = \sum_{i,j,k,k'} \frac{1}{4}\left(\frac{J}{N}\right)^2 e^{i(k-k')(r_i-r_j)} 
+    \left(F^{k,k'}_{+,+} +  F^{k,k'}_{-,-} +  F^{k,k'}_{+,-} +  F^{k,k'}_{-,+}\right) \left[
+    \left(\frac{\gamma_{k,x} - i \gamma_{k,y}}{|\gamma_k|}\right)^2 - \left( \frac{\gamma_{k',x} + i \gamma_{k',y}}{|\gamma_k'|}\right)^2 \right]
+\end{align}
+which leads to less additional terms in the Ising, but more contributions in the Dzyaloshinskii-Moriya term. \newline
+Note that $\vb{D}_1$ and $\vb{D}_2$ are identical up to the phase, which is complex conjugated.
+$\vb{J}_2$ acquires phases, too, which was not the case for $\vb{J}_1$.\newline
+Moreover, the anisotropy in the Heisenberg term changes its form. \newline
+The short hand notation
+\begin{align} \nonumber
+    \Theta_{\pm} = \left(\frac{\gamma_{k,x} - i \gamma_{k,y}}{|\gamma_k|}\right)^2+ \left( \frac{\gamma_{k',x} + i \gamma_{k',y}}{|\gamma_k'|}\right)^2 \pm 2 \left( \frac{\gamma_{k',x}+i\gamma_{k',y}}{|\gamma_{k'}|}\frac{\gamma_{k,x}-i\gamma_{k,y}}{|\gamma_{k}|} \right)
+\end{align}
+is used for the phase factors from the SOC.\newline
+\textcolor{red}{Give a Einordnung for the complete spin structure, compare with the spin structures of other systems - what is the same and what is new?}\newline
+
+\subsubsection{Free energies from the analytical approach}
+\textcolor{red}{I need to find realistic numbers for my parameters and plug them into my analytical free energy, best would be to create a phase diagram one in dependence of $\gamma$ and one of $\Delta_t$}\newline
+gap seems to be around $0.5$ meV for $T_c = 3.8K$ in the material $\alpha$-BiPd (fully gapped, weakly correlated superconductor) \cite{smidman2017superconductivity} \newline
+for my model, I assumed that the gap magnitudes are identical on both spin-split Fermi surfaces, which implies that the SOC is much smaller than the chemical potential $\rightarrow$ $\gamma << \mu \approx 1$eV
