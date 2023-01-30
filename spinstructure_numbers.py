@@ -6,12 +6,12 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 t = 1 #hopping
-cps_1 = 0.1 #singlet pairing potential
-cps_3 = 0.4 #triplet pairing potential
-gamma = 0.2 #SOC strength
-jott = 3 #RKKY interaction strength
+cps_1 = 0.4 #singlet pairing potential
+cps_3 = 0.2 #triplet pairing potential
+gamma = 0.3 #SOC strength
+jott = 5 #RKKY interaction strength
 mu = 0.5 #chemical potential
-sites =  12 #lattice sites
+sites =  10 #lattice sites
 spin_position = [3,7] #position of impurity spins
 
 parameters = [sites, mu, cps_1, cps_3, gamma, jott] + spin_position
@@ -97,12 +97,12 @@ def D_y_pospos(k_x, k_y ,k_2_x, k_2_y, pos, pos_2):
     constants = ((jott/sites)**2)/2
     position = np.exp(1j*((k[0]-k_2[0])*(pos-pos_2))) #position only along x-axis
 
-    abs_k = (k[0]**2+k[1]**2)
-    abs_k_2 = (k_2[0]**2+k_2[1]**2)
+    abs_k = np.sqrt(k[0]**2+k[1]**2)
+    abs_k_2 = np.sqrt(k_2[0]**2+k_2[1]**2)
     if abs_k == 0: abs_k = 0.001
     if abs_k_2 == 0: abs_k_2 = 0.001
 
-    phase = ((k[1]+1j*k[0])/abs_k) - ((k_2[1]-1j*k_2[0])/abs_k_2)
+    phase = ((k[1]-1j*k[0])/abs_k) - ((k_2[1]+1j*k_2[0])/abs_k_2)
 
     energy = 0
     for element in [[A,a], [B,b], [C,d], [D,c]]:
@@ -136,12 +136,12 @@ def D_y_negpos(k_x, k_y ,k_2_x, k_2_y, pos, pos_2):
     constants = (jott/sites)**2/2
     position = np.exp(1j*((k[0]-k_2[0])*(pos-pos_2))) #position only along x-axis
 
-    abs_k = (k[0]**2+k[1]**2)
-    abs_k_2 = (k_2[0]**2+k_2[1]**2)
+    abs_k = np.sqrt(k[0]**2+k[1]**2)
+    abs_k_2 = np.sqrt(k_2[0]**2+k_2[1]**2)
     if abs_k == 0: abs_k = 0.001
     if abs_k_2 == 0: abs_k_2 = 0.001
 
-    phase = ((k[1]-1j*k[0])/abs_k) - ((k_2[1]+1j*k_2[0])/abs_k_2)
+    phase = ((k[1]+1j*k[0])/abs_k) - ((k_2[1]-1j*k_2[0])/abs_k_2)
 
     energy = 0
     for element in [[A,b], [B,a], [C,d], [D,c]]:
@@ -158,8 +158,8 @@ def J_negpos(k_x, k_y ,k_2_x, k_2_y, pos, pos_2):
     constants = (jott/sites)**2/4
     position = np.exp(1j*((k[0]-k_2[0])*(pos-pos_2))) #position only along x-axis
 
-    abs_k = (k[0]**2+k[1]**2)
-    abs_k_2 = (k_2[0]**2+k_2[1]**2)
+    abs_k = np.sqrt(k[0]**2+k[1]**2)
+    abs_k_2 = np.sqrt(k_2[0]**2+k_2[1]**2)
     if abs_k == 0: abs_k = 0.001
     if abs_k_2 == 0: abs_k_2 = 0.001
 
@@ -183,8 +183,8 @@ def gamma_xy(k_x, k_y ,k_2_x, k_2_y, pos, pos_2):
     constants = (jott/sites)**2/4
     position = np.exp(1j*((k[0]-k_2[0])*(pos-pos_2))) #position only along x-axis
 
-    abs_k = (k[0]**2+k[1]**2)
-    abs_k_2 = (k_2[0]**2+k_2[1]**2)
+    abs_k = np.sqrt(k[0]**2+k[1]**2)
+    abs_k_2 = np.sqrt(k_2[0]**2+k_2[1]**2)
     if abs_k == 0: abs_k = 0.001
     if abs_k_2 == 0: abs_k_2 = 0.001
 
@@ -294,6 +294,7 @@ def main():
         name += '_'+str(np.round(element,2))
     name += '.png'
     plt.savefig(name)
+    plt.show()
     plt.clf()
     
     plt.plot(all_F)
@@ -310,7 +311,7 @@ def main():
         name += '_'+str(np.round(element,2))
     name += '.png'
     plt.savefig(name)
-    plt.show()
+    plt.clf()
 
     print(max(D_y))
 
