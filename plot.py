@@ -157,8 +157,34 @@ def analytical_vs_numerical(data_a, data_n, parameters_a, parameters_n, spin_con
 
 def test(x_values, y_values, details):
 
-    plt.plot(y_values, x_values)
+    plt.plot(x_values, y_values)
     plt.grid()
+    plt.title(str(details))
     plt.show()
+
+    return True
+
+def distance(x_values, y_values, parameters, labels, call, output=False):
+
+    if len(y_values) > 1:
+        for index in range(len(y_values)):
+            plt.plot(x_values, y_values[index], label=labels[index])
+    else:
+        plt.plot(x_values, y_values)
+
+    plt.xlabel(r'distance in $a$')
+    plt.ylabel(r'$F_{upup}-F_{downdown}$')
+    plt.title('free energy difference for different impurity separations')
+    plt.legend()
+    plt.grid()
+    
+    name = 'dF_'+str(call)
+    for element in parameters:
+        name += '_'+str(np.round(element,2))
+    name += '.png'
+    plt.savefig(name)
+    
+    if output: plt.show()
+    else: plt.clf()
 
     return True
