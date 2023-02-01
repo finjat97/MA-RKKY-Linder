@@ -4,6 +4,7 @@ import time as timer
 import numpy as np
 import itertools, operator, os
 from joblib import dump, load
+import spinstructure_numbers as analytical
 
 from tqdm import tqdm 
 
@@ -204,10 +205,10 @@ def gap_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
     # return [gap_studies_1+gap_studies_3, 3*energies, density_study+density_study_2+density_study_3, parameters, labels+labels_2+labels_3, site, step] #, config, free_energies]
     return [gap_studies_1+gap_studies_3, energies, density_study, parameters, labels, site, step]
 
-def soc_study(parameters, all_kvalues, spin_orientation, spin_positions, iteration = False, dis=False):
+def soc_study(parameters, all_kvalues, spin_orientation, spin_positions, iteration = False):
     # parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, imp1, imp2]
 
-    gap_studies_1, gap_studies_3, density_study, energies, free_energies, labels, config, F_distance = [], [], [], [], [], [], [], []
+    gap_studies_1, gap_studies_3, density_study, energies, free_energies, labels, config = [], [], [], [], [], [], []
     site = parameters[0]//2
     kvalues = all_kvalues[0]
     step = 0.2
@@ -221,19 +222,12 @@ def soc_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
         else: 
             eigen = H_diag.diagonalize_hamiltonian(parameters, spin_orientation)
 
-        if dis:
-            positive_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) > 0] #indices of positive k-values
-            zero_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) == 0]#indicies of zero k-values
-            F_difference, distances = distance(parameters, positive_kvalues, zero_kvalues)
-            F_distance.append(F_difference)
-    
-            gap = [[parameters[3]]*parameters[0]*parameters[1], [parameters[4]]*parameters[0]*parameters[1]]
-
         coeffis = []
         for k in range(parameters[1]):
             coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]] 
         
-        # if not iteration:
+        if not iteration:
+            gap = [[parameters[3]]*parameters[0]*parameters[1], [parameters[4]]*parameters[0]*parameters[1]]
            
         ldos = o.density_of_states(eigen, coeffis, [site,parameters[0]], [all_kvalues[1], all_kvalues[2]], output=False)
         
@@ -243,9 +237,9 @@ def soc_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
         labels.append(r'$\gamma$ = '+str(round(soc,2)))
         energies.append(eigen)
 
-        if parameters[6] != 0: 
-            config, free_energy = spin_loop(parameters, kvalues, parameters[-2:], iteration=False)
-            free_energies.append(free_energy)
+        # if parameters[6] != 0: 
+        #     config, free_energy = spin_loop(parameters, kvalues, parameters[-2:], iteration=False)
+        #     free_energies.append(free_energy)
         
         name = 'eigen data/eigen'
         for element in parameters:
@@ -255,7 +249,7 @@ def soc_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
 
     dump(free_energies, 'soc_F.txt', compress=2)
     
-    return [gap_studies_1+gap_studies_3,  energies, density_study, parameters, labels, site, step, config, free_energies, F_distance, distances]
+    return [gap_studies_1+gap_studies_3,  energies, density_study, parameters, labels, site, step, config, free_energies]
 
 def rkky_study(parameters, all_kvalues, spin_orientation, spin_positions, iteration=False):
 
@@ -263,7 +257,7 @@ def rkky_study(parameters, all_kvalues, spin_orientation, spin_positions, iterat
     
     # gap_studies_1, gap_studies_3, density_study_1, density_study_2, density_study_3, energies, labels_1, labels_2, labels_3 = [], [], [], [],[], [], [], [], []
     gap_studies_1, gap_studies_3, density_study_1, energies, labels_1= [], [], [], [], []
-    site = parameters[0]//2 +2
+    site = parameters[0]//2 -2
     kvalues = all_kvalues[0]
     step = 1
     
@@ -344,26 +338,28 @@ def distance(parameters, positive_kvalues, zero_kvalues, index):
 
     # define spin orientation
     spin = [[[0,1/2,0],[0,1/2,0]],[[0,1/2,0],[0,-1/2,0]]]
-    F_difference = []
+    F_difference, F_difference_an = [], []
     #create list with different parameter configurations, changing the parameter given with function call
-    param_list = []
-    values = np.arange(0,0.6, 0.15)
+    values = np.arange(0.1, 2, 0.3 )
+
     for value in values:
         parameters[index] = value
-        param_list += [parameters]
-
-    for system in param_list:
         F_upup, F_updown = [], []
+        print(parameters[index])
         for pos2 in np.arange(4,parameters[0]-3): #move second impurity away from first by going throught all lattice sites except edge
             ## calculate free energy for parallel spins in +y direction
-            eigen_upup = H_diag.diagonalize_hamiltonian(system, spin[0], positions=[4,pos2])
+            eigen_upup = H_diag.diagonalize_hamiltonian(parameters, spin[0], positions=[4,pos2])
             F_upup.append(o.free_energy(eigen_upup, [positive_kvalues, zero_kvalues], output=False))
             ## calculate free energy for anti-parallel spins in +-y direction
-            eigen_updown = H_diag.diagonalize_hamiltonian(system, spin[1], positions=[4,pos2])
-            F_updown.append(o.free_energy(eigen_updown, [positive_kvalues, zero_kvalues], output=False))            
+            eigen_updown = H_diag.diagonalize_hamiltonian(parameters, spin[1], positions=[4,pos2])
+            F_updown.append(o.free_energy(eigen_updown, [positive_kvalues, zero_kvalues], output=False))    
+            F_analytical = analytical.main(compare=True, distance=pos2-4)        
         # calculate difference in free energy for parallel and anti-parallel orientation
         F_difference += [list(map(lambda x,y: x-y , F_upup, F_updown))]
+        F_difference_an += [list(map(lambda x,y: x-y , F_analytical[0], F_analytical[1]))]
     # save separation distances of impurities for later plotting
     distances = list(map(lambda x: x-4, np.arange(4,parameters[0]-3) ))
 
-    return F_difference, distances, [round(element, 3) for element in values] #last entry is list of labels for later plotting
+    diff = list(map(lambda x,y: x-y, F_difference[0], F_difference[-2]))
+
+    return F_difference+F_difference_an, distances, [round(element, 3) for element in values], diff #second last entry is list of labels for later plotting
