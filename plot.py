@@ -33,13 +33,13 @@ def density(eigen, y_data, site, parameters, labels, call, output=False):
     if output: plt.show()
     else: plt.clf()
 
-    if type(y_data[0]) is list:
-        for element in range(len(y_data)):
-            derivative = [(y_data[element][entry]-y_data[element][entry-1])/0.01 for entry in np.arange(1,len(y_data[element]))]
-            derivative = [(derivative[entry]-derivative[entry-1])/0.01 for entry in np.arange(1,len(derivative))]
-            plt.plot(np.arange(eigen[element][0][0][0]+0.01,eigen[element][0][0][-1],0.01), derivative, label=str(element))
-    plt.legend()
-    plt.show()
+    # if type(y_data[0]) is list:
+    #     for element in range(len(y_data)):
+    #         derivative = [(y_data[element][entry]-y_data[element][entry-1])/0.01 for entry in np.arange(1,len(y_data[element]))]
+    #         derivative = [(derivative[entry]-derivative[entry-1])/0.01 for entry in np.arange(1,len(derivative))]
+    #         plt.plot(np.arange(eigen[element][0][0][0]+0.01,eigen[element][0][0][-1],0.01), derivative, label=str(element))
+    # plt.legend()
+    # plt.show()
     
     return True
 
@@ -167,13 +167,14 @@ def test(x_values, y_values, details):
 def distance(x_values, y_values, parameters, labels, call, output=False):
 
     if len(y_values) > 1:
+        print(len(y_values), len(y_values[0]), len(labels))
         for index in range(len(y_values)):
-            plt.plot(x_values, y_values[index], label=labels[index])
+            plt.plot( y_values[index], label=labels[index])
     else:
         plt.plot(x_values, y_values)
 
     plt.xlabel(r'distance in $a$')
-    plt.ylabel(r'$F_{upup}-F_{downdown}$')
+    plt.ylabel(r'$F_{upup}-F_{downdown}$ in 1/t')
     plt.title('free energy difference for different impurity separations')
     plt.legend()
     plt.grid()
