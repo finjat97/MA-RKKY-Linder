@@ -120,7 +120,7 @@ def gap_iteration(parameters, kvalues, spin, spin_pos, save=True):
     if save:
         name = 'eigen data/eigen'
         for element in parameters:
-            name += '_'+str(np.round(element,1))
+            name += '_'+str(np.round(element,3))
         name += '.txt'
         dump(eigen, name, compress=2)
 
@@ -147,17 +147,17 @@ def gap_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
     # gap_studies_1, gap_studies_3, density_study, energies, free_energies, labels = [], [], [], [], [], []
     gap_studies_1, gap_studies_3, density_study, density_study_2, density_study_3, energies, free_energies, labels, labels_2, labels_3 = [], [], [], [], [], [], [], [],[],[]
 
-    site = 20 #parameters[0]//2
+    site = parameters[0]//2 -1
     # kvalues = all_kvalues[0]
-    step = 0.4
+    step = 0.1
     
-    for triplet in np.arange(0, parameters[4] + step , step):
+    for triplet in np.arange(0.3, parameters[4] + step , step):
 
         parameters[4] = triplet
 
         name = 'eigen data/eigen'
         for element in parameters:
-            name += '_'+str(np.round(element,1))
+            name += '_'+str(np.round(element,3))
         name += '.txt'
 
         if not os.path.exists(name): #check if eigenvalues were already calculated
@@ -188,7 +188,7 @@ def gap_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
         density_study.append(ldos)
         # density_study_2.append(ldos_2)
         # density_study_3.append(ldos_3)
-        labels.append(r'$V$ = '+str(triplet))
+        labels.append(r'$V$ = '+str(round(triplet,3)))
         # labels_2.append('i = '+str(45))
         # labels_3.append('i = '+str(55))
         energies.append(eigen)
@@ -198,7 +198,7 @@ def gap_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
 
         name = 'eigen data/eigen'
         for element in parameters:
-            name += '_'+str(np.round(element,1))
+            name += '_'+str(np.round(element,3))
         name += '.txt'
         dump(eigen, name, compress=2)
     
@@ -243,7 +243,7 @@ def soc_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
         
         name = 'eigen data/eigen'
         for element in parameters:
-            name += '_'+str(np.round(element,1))
+            name += '_'+str(np.round(element,3))
         name += '.txt'
         dump(eigen, name, compress=2)
 
@@ -257,7 +257,7 @@ def rkky_study(parameters, all_kvalues, spin_orientation, spin_positions, iterat
     
     # gap_studies_1, gap_studies_3, density_study_1, density_study_2, density_study_3, energies, labels_1, labels_2, labels_3 = [], [], [], [],[], [], [], [], []
     gap_studies_1, gap_studies_3, density_study_1, energies, labels_1= [], [], [], [], []
-    site = parameters[0]//2 -2
+    site = parameters[0]//2 -1
     kvalues = all_kvalues[0]
     step = 1
     
@@ -267,7 +267,7 @@ def rkky_study(parameters, all_kvalues, spin_orientation, spin_positions, iterat
 
         name = 'eigen data/eigen'
         for element in parameters:
-            name += '_'+str(np.round(element,1))
+            name += '_'+str(np.round(element,3))
         name += '.txt'
 
         if not os.path.exists(name): #check if eigenvalues were already calculated
@@ -305,7 +305,7 @@ def rkky_study(parameters, all_kvalues, spin_orientation, spin_positions, iterat
         ## save eigenvalues for later purposes
         name = 'eigen data/eigen'
         for element in parameters:
-            name += '_'+str(np.round(element,1))
+            name += '_'+str(np.round(element,3))
         name += '.txt'
         dump(eigen, name, compress=2)
     
@@ -340,26 +340,27 @@ def distance(parameters, positive_kvalues, zero_kvalues, index):
     spin = [[[0,1/2,0],[0,1/2,0]],[[0,1/2,0],[0,-1/2,0]]]
     F_difference, F_difference_an = [], []
     #create list with different parameter configurations, changing the parameter given with function call
-    values = np.arange(0.1, 2, 0.3 )
+    values = np.arange(75, 81,1)
 
-    for value in values:
+    for value in tqdm(values):
         parameters[index] = value
-        F_upup, F_updown = [], []
-        print(parameters[index])
+        F_upup, F_updown, F_analytical_uu, F_analytical_ud = [], [], [], []
         for pos2 in np.arange(4,parameters[0]-3): #move second impurity away from first by going throught all lattice sites except edge
             ## calculate free energy for parallel spins in +y direction
             eigen_upup = H_diag.diagonalize_hamiltonian(parameters, spin[0], positions=[4,pos2])
             F_upup.append(o.free_energy(eigen_upup, [positive_kvalues, zero_kvalues], output=False))
             ## calculate free energy for anti-parallel spins in +-y direction
             eigen_updown = H_diag.diagonalize_hamiltonian(parameters, spin[1], positions=[4,pos2])
-            F_updown.append(o.free_energy(eigen_updown, [positive_kvalues, zero_kvalues], output=False))    
-            F_analytical = analytical.main(compare=True, distance=pos2-4)        
+            F_updown.append(o.free_energy(eigen_updown, [positive_kvalues, zero_kvalues], output=False))
+            # inter_results = analytical.main(compare=True, distance=pos2-4)
+            # F_analytical_uu.append(inter_results[0][0])
+            # F_analytical_ud.append(inter_results[0][1])
         # calculate difference in free energy for parallel and anti-parallel orientation
         F_difference += [list(map(lambda x,y: x-y , F_upup, F_updown))]
-        F_difference_an += [list(map(lambda x,y: x-y , F_analytical[0], F_analytical[1]))]
+        # F_difference_an += [list(map(lambda x,y: x-y , F_analytical_uu, F_analytical_ud))]
     # save separation distances of impurities for later plotting
     distances = list(map(lambda x: x-4, np.arange(4,parameters[0]-3) ))
 
     diff = list(map(lambda x,y: x-y, F_difference[0], F_difference[-2]))
 
-    return F_difference+F_difference_an, distances, [round(element, 3) for element in values], diff #second last entry is list of labels for later plotting
+    return F_difference, distances, [round(element, 3) for element in values], diff #second last entry is list of labels for later plotting
