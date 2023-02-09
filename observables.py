@@ -19,24 +19,35 @@ def density_of_states(eigen, coefficients, position, kvalues, output=False):
     
     density = [] #list of densities for each energy
     energies = np.arange(eigen[0][0][0],eigen[0][0][-1]+0.01,0.01) #list of discretize energy spectrum
-    offset = len(eigen[0][0])//2 # makes it easier to jsut choose coefficients belonging to positive eigenvalues
-    eigenvalues = range(offset) # gives the indices for all eigenvalue (either positive or negative, depending on if offset is used or not)
-          
+    offset = len(eigen[0][0])//2 # makes it easier to just choose coefficients belonging to positive eigenvalues
+    eigenvalues = range(offset) # gives the indices for all eigenvalues (either positive or negative, depending on if offset is used or not)
+    
+    def uu(x):
+        return np.square(np.absolute(coefficients[x][0][site][0,np.add(eigenvalues, offset)]))
+    def ud(x):
+        return np.square(np.absolute(coefficients[x][1][site][0,np.add(eigenvalues, offset)]))
+    def vu(x):
+        return np.square(np.absolute(coefficients[x][2][site][0,np.add(eigenvalues, offset)]))
+    def vd(x):
+        return np.square(np.absolute(coefficients[x][3][site][0,np.add(eigenvalues, offset)]))
+    def dm(y):
+        return [delta_function(x) for x in np.add(energy, - eigen[y][0][np.add(eigenvalues, offset)])] 
+    def dp(y):
+        return [delta_function(x) for x in np.add(energy, eigen[y][0][np.add(eigenvalues, offset)])] 
+
     for energy in energies:
         sum_1 , sum_2 = 0,0
-
-        for k in kvalues[0]: #all positive k-values
-
-            u_up_eigval = np.square(np.absolute(coefficients[k][0][site][0,np.add(eigenvalues, offset)]))
-            u_down_eigval = np.square(np.absolute(coefficients[k][1][site][0,np.add(eigenvalues, offset)]))
-            v_up_eigval = np.square(np.absolute(coefficients[k][2][site][0,np.add(eigenvalues, offset)]))
-            v_down_eigval = np.square(np.absolute(coefficients[k][3][site][0,np.add(eigenvalues, offset)]))
-
-            deltas_plus =  [delta_function(x) for x in np.add(energy, eigen[k][0][np.add(eigenvalues, offset)])] # delta_function(energies+eigen[k][0][np.add(eigenvalues, offset)])
-            deltas_minus = [delta_function(x) for x in np.add(energy, - eigen[k][0][np.add(eigenvalues, offset)])] # delta_function(energies-eigen[k][0][np.add(eigenvalues, offset)])
-            
-            sum_1 += np.sum(np.multiply(deltas_plus, u_down_eigval + u_up_eigval))
-            sum_2 += np.sum(np.multiply(deltas_minus, v_down_eigval + v_up_eigval))
+        # calculate coefficients for all positive k values
+        u_up_eigval = list(map(uu, kvalues[0]))
+        u_down_eigval = list(map(ud, kvalues[0]))
+        v_up_eigval = list(map(vu, kvalues[0]))
+        v_down_eigval = list(map(vd, kvalues[0]))
+        # calculate delta functions, which are prefactors, for all positive k values
+        deltas_plus = list(map(dp, kvalues[0]))
+        deltas_minus = list(map(dm, kvalues[0]))
+        # multiply the two different terms and add each one together, see numerical approach in master thesis for furthe explanation
+        sum_1 += np.sum(np.multiply(deltas_plus, u_down_eigval + u_up_eigval))
+        sum_2 += np.sum(np.multiply(deltas_minus, v_down_eigval + v_up_eigval))
 
         density.append((sum_1 + sum_2)/sites_x)
     
