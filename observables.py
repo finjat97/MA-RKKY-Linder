@@ -135,22 +135,30 @@ def selfconsistency_gap(eigen, potential, coefficients, kvalues):
     return [gap_singlet, [gap_triplet_up, gap_triplet_down]] #, gap_triplet_left
 
 def free_energy(eigen, kvalues, output=False):
-
-    summand1 = 0
-    summand2 = 0
-    beta = 100 #1/k_b T
-
-    for k in kvalues[0]: #all positive k-values
-        # going through all eigenvalues
-        for eigenvalue in range(len(eigen[0][0])):
-            summand1 += (- eigen[k][0][eigenvalue])/ 2 - (np.log(1+np.exp(-beta*eigen[k][0][eigenvalue])))/beta
     
-    for k in kvalues[1]: #all k == 0
-        for value in range(len(eigen[0][0])):
-            # selecting only positive eigen-energies
-            if eigen[k][0][value] > 0: 
-                summand2 += -(eigen[k][0][eigenvalue])/2 - (np.log(1+np.exp(-beta*eigen[k][0][eigenvalue])))/beta 
-    if output:
-        print('__free energy__\n', round(summand1+summand2,3))
+    beta = 100 #1/k_b T
+    # find all combinations of k values and eigenvalue indices
+    args_p = np.array(np.meshgrid(kvalues[0], list(range(len(eigen[0][0]))))).T.reshape(-1,2)
+    args_0 = np.array(np.meshgrid(kvalues[1], list(range(len(eigen[0][0]))))).T.reshape(-1,2)
+    # make sure to only consider positive energies
+    args_0 = [item for item in args_0 if eigen[args_0[0][0]][0][args_0[0][1]]>0]
+    # how to calculate the energy
+    def energy(x):
+        return (- eigen[x[0]][0][x[1]])/ 2 - (np.log(1+np.exp(-beta*eigen[x[0]][0][x[1]])))/beta
+    # calculate free energy
+    free_energy = sum(map(energy, args_p)) + sum(map(energy, args_0))
 
-    return summand1 + summand2
+    # for k in kvalues[0]: #all positive k-values
+    #     # going through all eigenvalues
+    #     for eigenvalue in range(len(eigen[0][0])):
+    #         summand1 += (- eigen[k][0][eigenvalue])/ 2 - (np.log(1+np.exp(-beta*eigen[k][0][eigenvalue])))/beta
+    
+    # for k in kvalues[1]: #all k == 0
+    #     for value in range(len(eigen[0][0])):
+    #         # selecting only positive eigen-energies
+    #         if eigen[k][0][value] > 0: 
+    #             summand2 += -(eigen[k][0][eigenvalue])/2 - (np.log(1+np.exp(-beta*eigen[k][0][eigenvalue])))/beta 
+    if output:
+        print('__free energy__\n', round(free_energy,3))
+
+    return free_energy
