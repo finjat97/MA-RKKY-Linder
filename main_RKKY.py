@@ -17,10 +17,8 @@ def main(sites_x, sites_y, mu, cps, tri, jott, gamma, imp1, imp2):
     spin_orientation = [spin_1, spin_2]
     spin_positions = [imp1,imp2]
 
-    # attract = [cps]*sites_x*sites_y
-    # attract_tri = [tri]*sites_x *sites_y
     
-    kvalues = list(np.arange(-np.pi, np.pi ,2*np.pi/(sites_y))) # N_y k-values
+    kvalues = list(np.arange(-np.pi, np.pi ,2*np.pi/(sites_y))) # N_y k-values \in [-pi, pi)
     positive_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) > 0] #indices of positive k-values
     zero_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) == 0]#indicies of zero k-values
     
@@ -29,8 +27,10 @@ def main(sites_x, sites_y, mu, cps, tri, jott, gamma, imp1, imp2):
     spin_opti = False
     triplet_study = False
     SOC_study = False
-    RKKY_study = True
+    RKKY_study = False
     gap_3D = False
+    distance = False
+    interband = True
 
     #### let's get to work
     if spin_opti:
@@ -57,11 +57,12 @@ def main(sites_x, sites_y, mu, cps, tri, jott, gamma, imp1, imp2):
 
     if SOC_study:
         # for different gamma values: density, singlet gap and triplet gap
-        study_results = routines.soc_study(parameters, [kvalues, positive_kvalues, zero_kvalues], spin_orientation, spin_positions)
+        study_results = routines.soc_study(parameters, [kvalues, positive_kvalues, zero_kvalues], spin_orientation, spin_positions, dis=False)
         plot.density(study_results[1], study_results[2], study_results[5], study_results[3], study_results[4], 'soc')
         # plot.gap(routines.gap_eff(sites_x, study_results[0], gamma, study_results[6])[1], parameters, study_results[4], 'soc')
-        if len(study_results[8]) > 3:
-            plot.spinphase(study_results[8], study_results[7], parameters, study_results[4])
+        # if len(study_results[8]) > 3:
+        #     plot.spinphase(study_results[8], study_results[7], parameters, study_results[4])
+        # plot.distance(study_results[10], study_results[9], parameters, study_results[4], 'soc', output=True)
 
     if RKKY_study:
         # for different jott values: density, singlet gap and triplet gap
@@ -78,6 +79,15 @@ def main(sites_x, sites_y, mu, cps, tri, jott, gamma, imp1, imp2):
             gap.append(routines.zero_LDOS_gap(parameters, study_results[2], study_results[1], study_results[6]))
         
         plot.gap_3D(range(0,10,2), np.arange(0.5, parameters[4] + study_results[6] , study_results[6]), gap, parameters)
+
+    if distance:
+        F_difference, distances, labels, diff = routines.distance(parameters, positive_kvalues, zero_kvalues, 4)
+        plot.distance(distances, F_difference, parameters, labels, 'tri', output=True)
+        # plot.test(distances*4, diff, parameters)
+
+    if interband:
+        amplitude, label = routines.interband([kvalues, positive_kvalues, zero_kvalues], parameters)
+        plot.test(label, amplitude, parameters)
 
     return True 
 
