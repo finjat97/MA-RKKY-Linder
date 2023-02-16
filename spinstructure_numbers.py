@@ -12,18 +12,17 @@ t = 1 #hopping
 gamma = 0.1 #SOC strength
 jott = 2 #RKKY interaction strength
 mu = 1 #chemical potential
-const = 0.2 #correction interaction potential from Scaffidi thesis
-cps_1 = 0.01 #const/0.25 #singlet pairing potential, for jott/cps_1 > 0.29 singlet regime
-cps_3 = 0.03 #cps_1 - 2*const #triplet pairing potential, most dominant for jott/cps_1<0.06
+cps_1 = 0.05 #singlet pairing strength, << t
+cps_3 = 0.0 #triplet pairing strength, <<t
 
 
-def fermi_dis(energy): # input and return: np.float64
+def fermi_dis(energy): # input and return: 1d array
     constant = 0.01 # k_B*T
     
     return 1/ (np.exp(energy/constant)+1)
 
 # energy including spin orbit coupling: WARNING: I changed the calculation of |\gamma|
-def xi(k, heli): # input: list of len 2, int; return: float
+def xi(k, heli): # input: (2,k-space) array, int; return: (k space, ) array, float
     res = -2*t*(np.cos(k[:,0])+np.cos(k[:,1])) - mu + heli*np.sqrt((gamma**2)*(k[:,1]**2 + k[:,0]**2))
     return res
 
@@ -31,9 +30,7 @@ def xi(k, heli): # input: list of len 2, int; return: float
 #supercondcuting gap (only for Rashba SOC and d parallel to SOC)
 def delta(k): #input: list with length 2; return: 2d np.array
     #return np.array([[(-k[:,1]+1j*(-k[:,0]))*cps_3,cps_1], [-cps_1, (k[:,1]+1j*(-k[:,0]))*cps_3]]) 
-    singlet = cps_1
-    triplet = cps_3
-    return [singlet + triplet, singlet-triplet]
+    return [cps_1/2 + cps_3/2, cps_1/2-cps_3/2]
 
 def E(k, heli):
     if heli > 0: index = 0
@@ -244,7 +241,7 @@ def main(distance, compare=True, plotting=False):
 
     #calculate free energy for all spin configurations and make labels for later plotting
     for spin in (spin_orientations):
-        heisenberg = np.array([spin[0][0]*spin[1][0] , spin[0][1]*spin[1][1] , spin[0][2]*spin[1][2]])
+        heisenberg = np.reshape(np.array([spin[0][0]*spin[1][0] , spin[0][1]*spin[1][1] , spin[0][2]*spin[1][2]]),(3,1))
         version_label = []
         for site in range(len(spin)):
             index = [i for i, element in enumerate(spin[site]) if element != 0][0]
@@ -261,18 +258,18 @@ def main(distance, compare=True, plotting=False):
 
         configurations_label.append(version_label)
 
-        sumy = sum(J_pospos_result[1]*heisenberg[1])
-        sumx = sum(J_pospos_result[0]*heisenberg[0])
-        sumz = sum(J_pospos_result[2]*heisenberg[2])
-        J_p_res = sumx + sumy + sumz
+        # sumy = sum(J_pospos_result[1]*heisenberg[1])
+        # sumx = sum(J_pospos_result[0]*heisenberg[0])
+        # sumz = sum(J_pospos_result[2]*heisenberg[2])
+        # J_p_res = sumx + sumy + sumz
         
-        sumy = sum(J_negpos_result[1]*heisenberg[1])
-        sumx = sum(J_negpos_result[0]*heisenberg[0]) 
-        sumz = sum(J_negpos_result[2]*heisenberg[2])
-        J_n_res = sumx + sumy + sumz
+        # sumy = sum(J_negpos_result[1]*heisenberg[1])
+        # sumx = sum(J_negpos_result[0]*heisenberg[0]) 
+        # sumz = sum(J_negpos_result[2]*heisenberg[2])
+        # J_n_res = sumx + sumy + sumz
 
-        # J_p_res = sum(sum(heisenberg*J_pospos_result))
-        # J_n_res = sum(sum(heisenberg*J_negpos_result))
+        J_p_res = sum(sum(heisenberg*J_pospos_result))
+        J_n_res = sum(sum(heisenberg*J_negpos_result))
 
         J_vec.append(J_p_res+J_n_res)
 
