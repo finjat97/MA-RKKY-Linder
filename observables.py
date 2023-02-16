@@ -1,4 +1,5 @@
 import numpy as np 
+import RKKY_diagonalization_ky as H_diag
 
 def delta_function(x):
     # Gaussian approximation
@@ -58,7 +59,7 @@ def density_of_states(eigen, coefficients, position, kvalues, output=False):
 
 def selfconsistency_gap(eigen, potential, coefficients, kvalues):
     #potential is interaction strength of electrons, format: [singlet potential, triplet potential]
-    gap_singlet, gap_triplet_up, gap_triplet_down = [], [],[] #, gap_triplet_left , []
+    gap_singlet, gap_triplet_up, gap_triplet_down, gap_triplet = [], [],[], [] #, gap_triplet_left , []
 
     # going through all sites in x-direction
     for site in range(len(eigen[0][0])//4):
@@ -79,7 +80,8 @@ def selfconsistency_gap(eigen, potential, coefficients, kvalues):
                     sum_1 += potential[0][site]*((v_down[0,value]*np.conj(u_up[0,value])-v_up[0,value]*np.conj(u_down[0,value]))*fermi_dis(eigen[k][0][value]) +v_up[0,value]*np.conj(u_down[0,value]))
 
         ## triplet gap
-        sum_3_up_next, sum_3_down_next = 0,0 # , sum_3_pre , 0
+        #sum_3_up_next, sum_3_down_next, sum_3_updown_next, sum_3_downup_next = 0,0,0,0 # , sum_3_pre , 0
+        sum_3 = 0
         site_next = site + 1 
         #site_pre = site - 1
         #going to the right
@@ -90,21 +92,27 @@ def selfconsistency_gap(eigen, potential, coefficients, kvalues):
                 u_up, u_down, v_up, v_down = coefficients[k][0], coefficients[k][1], coefficients[k][2], coefficients[k][3]
                 # going through all eigenvalues
                 for value in range(len(eigen[0][0])):
-                    sum_3_up_next += potential[1][0][site]*((u_up[site_next][0,value]*np.conj(v_up[site][0,value])-u_down[site][0,value]*np.conj(v_down[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_down[site][0,value]*np.conj(v_down[site_next][0,value]))
-                    sum_3_down_next += potential[1][1][site]*((u_down[site_next][0,value]*np.conj(v_down[site][0,value])-u_up[site][0,value]*np.conj(v_up[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_up[site][0,value]*np.conj(v_up[site_next][0,value]))
+                    #
+                    sum_3 += potential[1][0][site]*((u_up[site_next][0,value]*np.conj(v_up[site][0,value])-u_down[site][0,value]*np.conj(v_down[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_down[site][0,value]*np.conj(v_down[site_next][0,value]))
+                    sum_3 += potential[1][1][site]*((u_down[site_next][0,value]*np.conj(v_down[site][0,value])-u_up[site][0,value]*np.conj(v_up[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_up[site][0,value]*np.conj(v_up[site_next][0,value]))
+                    sum_3 += potential[1][0][site]*((u_up[site_next][0,value]*np.conj(v_down[site][0,value])-u_down[site][0,value]*np.conj(v_up[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_down[site][0,value]*np.conj(v_up[site_next][0,value]))
+                    sum_3 += potential[1][1][site]*((u_down[site_next][0,value]*np.conj(v_up[site][0,value])-u_up[site][0,value]*np.conj(v_down[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_up[site][0,value]*np.conj(v_down[site_next][0,value]))
 
             for k in kvalues[1]: # k=0
                 u_up, u_down, v_up, v_down = coefficients[k][0], coefficients[k][1], coefficients[k][2], coefficients[k][3]
                 for value in range(len(eigen[0][0])):
                     # selecting only positive eigenvalues
                     if eigen[k][0][value] > 0: 
-                        sum_3_up_next += potential[1][0][site]*((u_up[site_next][0,value]*np.conj(v_up[site][0,value])-u_down[site][0,value]*np.conj(v_down[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_down[site][0,value]*np.conj(v_down[site_next][0,value]))
-                        sum_3_down_next += potential[1][1][site]*((u_down[site_next][0,value]*np.conj(v_down[site][0,value])-u_up[site][0,value]*np.conj(v_up[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_up[site][0,value]*np.conj(v_up[site_next][0,value]))
+                        sum_3 += potential[1][0][site]*((u_up[site_next][0,value]*np.conj(v_up[site][0,value])-u_down[site][0,value]*np.conj(v_down[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_down[site][0,value]*np.conj(v_down[site_next][0,value]))
+                        sum_3 += potential[1][1][site]*((u_down[site_next][0,value]*np.conj(v_down[site][0,value])-u_up[site][0,value]*np.conj(v_up[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_up[site][0,value]*np.conj(v_up[site_next][0,value]))
+                        sum_3 += potential[1][0][site]*((u_up[site_next][0,value]*np.conj(v_down[site][0,value])-u_down[site][0,value]*np.conj(v_up[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_down[site][0,value]*np.conj(v_up[site_next][0,value]))
+                        sum_3 += potential[1][1][site]*((u_down[site_next][0,value]*np.conj(v_up[site][0,value])-u_up[site][0,value]*np.conj(v_down[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_up[site][0,value]*np.conj(v_down[site_next][0,value]))
             
-            if site == 0: first_up, first_down = sum_3_up_next, sum_3_down_next
+            #if site == 0: first_up, first_down = sum_3_up_next, sum_3_down_next
+            if site == 0: first = sum_3
 
         else: 
-            sum_3_up_next, sum_3_down_next = first_up, first_down
+            sum_3 = first
         #going to the left
         # if site_pre > 0:
 
@@ -128,11 +136,13 @@ def selfconsistency_gap(eigen, potential, coefficients, kvalues):
         #     sum_3_pre = 0
 
         gap_singlet.append(sum_1/(len(eigen[0][0])//4)) # sum divided by N
-        gap_triplet_up.append(sum_3_up_next/(len(eigen[0][0])//4))
-        gap_triplet_down.append(sum_3_down_next/(len(eigen[0][0])//4))
+        # gap_triplet_up.append(sum_3_up_next/(len(eigen[0][0])//4))
+        # gap_triplet_down.append(sum_3_down_next/(len(eigen[0][0])//4))
+        # gap_triplet.append((sum_3_down_next+sum_3_up_next)/(len(eigen[0][0])//4))
+        gap_triplet.append(sum_3/(len(eigen[0][0])//4))
         #gap_triplet_left.append(sum_3_pre/(len(eigen[0][0])//4))
 
-    return [gap_singlet, [gap_triplet_up, gap_triplet_down]] #, gap_triplet_left
+    return [gap_singlet, [gap_triplet_up, gap_triplet_down], gap_triplet] #, gap_triplet_left
 
 def free_energy(eigen, kvalues, output=False):
     
@@ -162,3 +172,38 @@ def free_energy(eigen, kvalues, output=False):
         print('__free energy__\n', round(free_energy,3))
 
     return free_energy
+
+def interband_pairing(eigen, kvalues, coeffis):
+
+    for site in range(len(eigen[0][0])//4):
+        ## triplet gap
+        sum_3_up_next, sum_3_down_next = 0,0 # , sum_3_pre , 0
+        site_next = site + 1 
+        #site_pre = site - 1
+        #going to the right
+        if site_next < len(eigen[0][0])//4:
+
+            # going through all k-values
+            for k in kvalues[0]: # k>0
+                u_up, u_down, v_up, v_down = coeffis[k][0], coeffis[k][1], coeffis[k][2], coeffis[k][3]
+                # going through all eigenvalues
+                for value in range(len(eigen[0][0])):
+                    sum_3_up_next += ((u_up[site_next][0,value]*np.conj(v_up[site][0,value])-u_down[site][0,value]*np.conj(v_down[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_down[site][0,value]*np.conj(v_down[site_next][0,value]))
+                    sum_3_down_next += ((u_down[site_next][0,value]*np.conj(v_down[site][0,value])-u_up[site][0,value]*np.conj(v_up[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_up[site][0,value]*np.conj(v_up[site_next][0,value]))
+
+            for k in kvalues[1]: # k=0
+                u_up, u_down, v_up, v_down = coeffis[k][0], coeffis[k][1], coeffis[k][2], coeffis[k][3]
+                for value in range(len(eigen[0][0])):
+                    # selecting only positive eigenvalues
+                    if eigen[k][0][value] > 0: 
+                        sum_3_up_next += ((u_up[site_next][0,value]*np.conj(v_up[site][0,value])-u_down[site][0,value]*np.conj(v_down[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_down[site][0,value]*np.conj(v_down[site_next][0,value]))
+                        sum_3_down_next += ((u_down[site_next][0,value]*np.conj(v_down[site][0,value])-u_up[site][0,value]*np.conj(v_up[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_up[site][0,value]*np.conj(v_up[site_next][0,value]))
+            
+            if site == 0: first_up, first_down = sum_3_up_next, sum_3_down_next
+
+        else: 
+            sum_3_up_next, sum_3_down_next = first_up, first_down
+
+        amplitude = sum_3_up_next/(len(eigen[0][0])//4)-sum_3_down_next/(len(eigen[0][0])//4)
+
+    return amplitude
