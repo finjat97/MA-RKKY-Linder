@@ -8,7 +8,7 @@ import spinstructure_numbers as analytical
 
 from tqdm import tqdm 
 
-def spin_loop(parameters, kvalues, spin_pos, iteration):
+def spin_loop(parameters, kvalues, spin_pos, iteration=False):
     # parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, imp1, imp2]
 
     positive_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) > 0] #indices of positive k-values
@@ -21,9 +21,8 @@ def spin_loop(parameters, kvalues, spin_pos, iteration):
     [[0,1/2,0],[0,0,-1/2]], [[0,-1/2,0],[0,0,-1/2]], [[0,0,1/2],[0,0,1/2]],  [[0,0,-1/2],[0,0,1/2]],  [[0,0,1/2],[0,0,-1/2]],  [[0,0,-1/2],[0,0,-1/2]]]
 
     configurations_label = []
-
-    for version in range(len(configurations)):
-
+        
+    for version in (range(len(configurations))):
         version_label = []
 
         for site in range(len(configurations[version])):
@@ -41,7 +40,6 @@ def spin_loop(parameters, kvalues, spin_pos, iteration):
 
         configurations_label.append(version_label)
         
-    for version in tqdm(range(len(configurations))):
         if iteration:
             eigen, gap = gap_iteration(parameters, kvalues, configurations[version], spin_pos)
         else: 
@@ -71,8 +69,11 @@ def gap_iteration(parameters, kvalues, spin, spin_pos, save=True):
 
         eigen = H_diag.diagonalize_hamiltonian(parameters[0], parameters[1], 1, parameters[2], parameters[5], attract, attract_tri, parameters[6] ,spin, spin_pos, output=False) # list with N_x entries, entry = (eigvals, eigvecs) of k
         
-        for k in range(parameters[1]):
-            coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]]
+        def H_coeffi(x):
+            return H_diag.operator_coefficients(eigen,x)
+        coeffis = list(map(H_coeffi, list(range(parameters[1]))))
+        # for k in range(parameters[1]):
+        #     coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]]
         gap = o.selfconsistency_gap(eigen, [parameters[3],parameters[4]], coeffis, [positive_kvalues, zero_kvalues]) # gap = [singlet, [triplet up, triplet down]]
 
         # criterion based on singlet-gap
@@ -132,10 +133,13 @@ def gap_eff(sites_x, gap, tri, step):
     
     for V in range(len(np.arange(0.5, tri+step, step))):
         # triplet = np.arange(0, tri+step, step)[V]
-        for site in range(sites_x):
-            # if gap[0][V][site] >= gap[1][V][site]: eff.append((gap[0][V][site]-gap[1][V][site])/(1-triplet))
-            # else: eff.append((gap[1][V][site]-gap[0][V][site])/(1-triplet))
-            rel.append((gap[0][V][site]- gap[1][V][site]))
+        def rel_gap(x):
+            return (gap[0][V][x]- gap[1][V][x])
+        rel = list(map(rel_gap, list(range(sites_x))))
+        # for site in range(sites_x):
+        #     # if gap[0][V][site] >= gap[1][V][site]: eff.append((gap[0][V][site]-gap[1][V][site])/(1-triplet))
+        #     # else: eff.append((gap[1][V][site]-gap[0][V][site])/(1-triplet))
+        #     rel.append((gap[0][V][site]- gap[1][V][site]))
     
     rel = [rel[(element-1)*sites_x: element*sites_x] for element in range(len(np.arange(0, tri+step, step)))]
 
@@ -173,9 +177,13 @@ def gap_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
             eigen = load(name)
             gap = [[parameters[3]]*parameters[0]*parameters[1], [parameters[4]]*parameters[0]*parameters[1]] 
 
-        coeffis = []
-        for k in range(parameters[1]):
-            coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]] 
+        def H_coeffi(x):
+            return H_diag.operator_coefficients(eigen,x)
+        coeffis = list(map(H_coeffi, list(range(parameters[1]))))
+
+        # coeffis = []
+        # for k in range(parameters[1]):
+        #     coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]] 
         
         #gap_effective = gap_eff(parameters[0], gap, gap[1])
         ldos = o.density_of_states(eigen, coeffis, [site,parameters[0]], [all_kvalues[1], all_kvalues[2]], output=False)
@@ -222,9 +230,13 @@ def soc_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
         else: 
             eigen = H_diag.diagonalize_hamiltonian(parameters, spin_orientation)
 
-        coeffis = []
-        for k in range(parameters[1]):
-            coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]] 
+        def H_coeffi(x):
+            return H_diag.operator_coefficients(eigen,x)
+        
+        coeffis = list(map(H_coeffi, list(range(parameters[1]))))
+
+        # for k in range(parameters[1]):
+        #     coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]] 
         
         if not iteration:
             gap = [[parameters[3]]*parameters[0]*parameters[1], [parameters[4]]*parameters[0]*parameters[1]]
@@ -283,9 +295,13 @@ def rkky_study(parameters, all_kvalues, spin_orientation, spin_positions, iterat
             eigen = load(name)
             gap = [[parameters[3]]*parameters[0]*parameters[1], [parameters[4]]*parameters[0]*parameters[1]] 
 
-        coeffis = []
-        for k in range(parameters[1]):
-            coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]] 
+        def H_coeffi(x):
+            return H_diag.operator_coefficients(eigen,x)
+        coeffis = list(map(H_coeffi, list(range(parameters[1]))))
+        
+        # coeffis = []
+        # for k in range(parameters[1]):
+        #     coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]] 
         
         #gap_effective = gap_eff(parameters[0], gap, gap[1])
         ldos_1 = o.density_of_states(eigen, coeffis, [site,parameters[0]], [all_kvalues[1], all_kvalues[2]], output=False)
@@ -340,27 +356,67 @@ def distance(parameters, positive_kvalues, zero_kvalues, index):
     spin = [[[0,1/2,0],[0,1/2,0]],[[0,1/2,0],[0,-1/2,0]]]
     F_difference, F_difference_an = [], []
     #create list with different parameter configurations, changing the parameter given with function call
-    values = np.arange(75, 81,1)
+    values = np.arange(0,1,0.2)
 
     for value in tqdm(values):
         parameters[index] = value
         F_upup, F_updown, F_analytical_uu, F_analytical_ud = [], [], [], []
-        for pos2 in np.arange(4,parameters[0]-3): #move second impurity away from first by going throught all lattice sites except edge
-            ## calculate free energy for parallel spins in +y direction
+        for pos2 in np.arange(10,parameters[0]-10): #move second impurity away from first by going throught all lattice sites except edge
+            # calculate free energy for parallel spins in +y direction
             eigen_upup = H_diag.diagonalize_hamiltonian(parameters, spin[0], positions=[4,pos2])
             F_upup.append(o.free_energy(eigen_upup, [positive_kvalues, zero_kvalues], output=False))
             ## calculate free energy for anti-parallel spins in +-y direction
             eigen_updown = H_diag.diagonalize_hamiltonian(parameters, spin[1], positions=[4,pos2])
             F_updown.append(o.free_energy(eigen_updown, [positive_kvalues, zero_kvalues], output=False))
-            # inter_results = analytical.main(compare=True, distance=pos2-4)
-            # F_analytical_uu.append(inter_results[0][0])
-            # F_analytical_ud.append(inter_results[0][1])
         # calculate difference in free energy for parallel and anti-parallel orientation
         F_difference += [list(map(lambda x,y: x-y , F_upup, F_updown))]
-        # F_difference_an += [list(map(lambda x,y: x-y , F_analytical_uu, F_analytical_ud))]
     # save separation distances of impurities for later plotting
-    distances = list(map(lambda x: x-4, np.arange(4,parameters[0]-3) ))
+    distances = list(map(lambda x: x-4, np.arange(4,11-3) ))
 
-    diff = list(map(lambda x,y: x-y, F_difference[0], F_difference[-2]))
+    # calculate F difference from analytical expression
+    inter_results = list(map(analytical.main, distances))
 
-    return F_difference, distances, [round(element, 3) for element in values], diff #second last entry is list of labels for later plotting
+    def uu_ud(x):
+        return inter_results[x][0] - inter_results[x][1]
+    
+    F_difference_an = list(map(uu_ud, list(range(len(inter_results)))))
+
+    diff = list(map(lambda x,y: x-y, F_difference[0], F_difference[1]))
+    diff += list(map(lambda x,y: x-y, F_difference[-2], F_difference[-1]))
+    # return F_difference + [F_difference_an], distances, [round(element, 3) for element in values] + ['analytical'], diff #second last entry is list of labels for later plotting
+    # return F_difference, distances,  [round(element, 3) for element in values], diff
+    return F_difference_an, distances, ['analytical'], diff
+
+def interband(k, parameters, spin_orientation = [[0,1/2,0], [0,1/2,0]]):
+    # parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, imp1, imp2]
+
+    amplitudes, label = [], []
+
+    step = 0.1
+    
+    for triplet in np.arange(0.3, parameters[4] + step , step):
+
+        parameters[4] = triplet
+
+        name = 'eigen data/eigen'
+        for element in parameters:
+            name += '_'+str(np.round(element,3))
+        name += '.txt'
+
+        if not os.path.exists(name): #check if eigenvalues were already calculated
+            eigen = H_diag.diagonalize_hamiltonian(parameters, spin_orientation)
+        
+        else:
+            eigen = load(name)
+
+        def H_coeffi(x):
+            return H_diag.operator_coefficients(eigen,x)
+        coeffis = list(map(H_coeffi, list(range(parameters[1]))))
+
+        res = o.interband_pairing(eigen, k[1:], coeffis)
+       
+        label.append(r'$V$ = '+str(round(triplet,3)))
+     
+        amplitudes.append(res)
+    
+    return amplitudes, label
