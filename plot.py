@@ -22,9 +22,9 @@ def density(eigen, y_data, site, parameters, labels, call, output=False):
     plt.ylabel('LDOS')
     plt.legend()
     plt.grid()
-
+    plt.tight_layout()
    
-    name = 'ldos_'+str(call)
+    name = 'ldos/ldos_'+str(call)
     for element in parameters:
         name += '_'+str(np.round(element,2))
     name += '.png'
@@ -59,6 +59,7 @@ def gap(gap, parameters, labels, call, abs= True, output=False):
     plt.ylabel('gap')
     plt.legend()
     plt.grid()
+    plt.tight_layout()
     
     name = 'gap_'+str(call)
     for element in parameters:
@@ -98,7 +99,7 @@ def spinphase(free_energy, spin_config, parameters, legend, output=False):
     for element in parameters:
         name += '_'+str(np.round(element,2))
     name += '.png'
-    
+    plt.tight_layout()
     plt.savefig(name)
     if output: plt.show()
     plt.clf()
@@ -120,7 +121,7 @@ def gap_3D(x_values, y_values, z_values, param):
     plt.yticks(range(len(y_values)), y_values)
     plt.xlabel('RKKY')
     plt.ylabel('V')
-    
+    plt.tight_layout()
     plt.show()
 
     return True
@@ -148,7 +149,7 @@ def analytical_vs_numerical(data_a, data_n, parameters_a, parameters_n, spin_con
     plt.legend()
     plt.title('numerical and analytical spin structure')
     
-
+    plt.tight_layout()
     plt.savefig('spinstructure_comparison.png')
     plt.clf()
     # plt.show()
@@ -160,13 +161,14 @@ def test(x_values, y_values, details):
     plt.plot(x_values, y_values)
     plt.grid()
     plt.title(str(details))
+    plt.tight_layout()
     plt.show()
 
     return True
 
 def distance(x_values, y_values, parameters, labels, call, output=False):
 
-    if len(y_values) > 1:
+    if type(y_values[0]) == list:
         print(len(y_values), len(y_values[0]), len(labels))
         for index in range(len(y_values)):
             plt.plot( y_values[index], label=labels[index])
@@ -174,12 +176,13 @@ def distance(x_values, y_values, parameters, labels, call, output=False):
         plt.plot(x_values, y_values)
 
     plt.xlabel(r'distance in $a$')
-    plt.ylabel(r'$F_{upup}-F_{downdown}$ in 1/t')
+    plt.ylabel(r'$F_{↑↑}-F_{↑↓}$ in 1/t')
     plt.title('free energy difference for different impurity separations')
     plt.legend()
     plt.grid()
+    plt.tight_layout()
     
-    name = 'dF_'+str(call)
+    name = 'dF/dF_'+str(call)
     for element in parameters:
         name += '_'+str(np.round(element,2))
     name += '.png'
