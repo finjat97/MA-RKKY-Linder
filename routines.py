@@ -11,44 +11,60 @@ from tqdm import tqdm
 def spin_loop(parameters, kvalues, spin_pos, iteration=False):
     # parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, imp1, imp2]
 
+    spin = 1/2
+
+    def spin_orientation(winkel):
+        res = np.array([np.round(spin*np.sin(winkel[:,0])*np.cos(winkel[:,1]),5), np.round(spin*np.sin(winkel[:,0])*np.sin(winkel[:,1]),5), np.round(spin*np.cos(winkel[:,0]),5)])
+        return res
+
     positive_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) > 0] #indices of positive k-values
     zero_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) == 0]#indicies of zero k-values
     energies = []
+
+    step = 4 # number of intervals to dicretisize the spherical coordinates
+    # find all angle combinations for discretisized spherical coordinates
+    angle = np.array(np.meshgrid(np.arange(0, np.pi, np.pi/step), np.arange(-np.pi, np.pi, np.pi/step))).T.reshape(-1,2)
+    # calculate all possible orientations based on those angle for one spin
+    one_spin = spin_orientation(angle).T
+    # find all possible combinations of two arrays with length of the angle combinations (aka. number of possible directions of one spin)
+    combo = np.array(np.meshgrid(range(angle.shape[0]),range(angle.shape[0]))).T.reshape(-1,2)
+    # find all possible ways to combine two spins with all directions allowed by the previous calculated angle combinations
+    two_spin = np.unique(np.array([ one_spin[combo[:,0]] , one_spin[combo[:,1]] ]), axis=1) #shape = (2, possible directions **2, 3)        
 
     configurations = [[[0,1/2,0],[0,1/2,0]], [[1/2,0,0],[1/2,0,0]], [[0,-1/2,0],[0,1/2,0]], [[-1/2,0,0],[1/2,0,0]], [[0,1/2,0],[0,-1/2,0]], [[1/2,0,0],[-1/2,0,0]], 
     [[1/2,0,0],[0,1/2,0]], [[0,1/2,0],[1/2,0,0]], [[-1/2,0,0],[0,1/2,0]], [[0,-1/2,0],[1/2,0,0]], [[1/2,0,0],[0,-1/2,0]], [[0,1/2,0],[-1/2,0,0]],
     [[1/2,0,0],[0,0,1/2]], [[1/2,0,0],[0,0,-1/2]], [[-1/2,0,0],[0,0,1/2]], [[-1/2,0,0],[0,0,-1/2]], [[0,1/2,0],[0,0,1/2]], [[0,-1/2,0],[0,0,1/2]],
     [[0,1/2,0],[0,0,-1/2]], [[0,-1/2,0],[0,0,-1/2]], [[0,0,1/2],[0,0,1/2]],  [[0,0,-1/2],[0,0,1/2]],  [[0,0,1/2],[0,0,-1/2]],  [[0,0,-1/2],[0,0,-1/2]]]
 
-    configurations_label = []
+    configurations_label = list(range(len(two_spin)))
         
-    for version in (range(len(configurations))):
-        version_label = []
+    for version in (range(len(two_spin))):
+        # version_label = []
 
-        for site in range(len(configurations[version])):
-            index = [i for i, element in enumerate(configurations[version][site]) if element != 0][0]
-            if index == 0: 
-                if configurations[version][site][index] > 0: 
-                    version_label += ['→']
-                else: version_label += ['←']
-            if index == 1:
-                if configurations[version][site][index] > 0: version_label += ['x']
-                else: version_label += ['.']
-            if index == 2:
-                if configurations[version][site][index] > 0: version_label += ['↑']
-                else: version_label += ['↓']
+        # for site in range(len(configurations[version])):
+        #     index = [i for i, element in enumerate(configurations[version][site]) if element != 0][0]
+        #     if index == 0: 
+        #         if configurations[version][site][index] > 0: 
+        #             version_label += ['→']
+        #         else: version_label += ['←']
+        #     if index == 1:
+        #         if configurations[version][site][index] > 0: version_label += ['x']
+        #         else: version_label += ['.']
+        #     if index == 2:
+        #         if configurations[version][site][index] > 0: version_label += ['↑']
+        #         else: version_label += ['↓']
 
-        configurations_label.append(version_label)
+        # configurations_label.append(version_label)
         
         if iteration:
-            eigen, gap = gap_iteration(parameters, kvalues, configurations[version], spin_pos)
+            eigen, gap = gap_iteration(parameters, kvalues, two_spin[version], spin_pos)
         else: 
-            eigen = H_diag.diagonalize_hamiltonian(parameters, configurations[version], positions=spin_pos)
+            eigen = H_diag.diagonalize_hamiltonian(parameters, two_spin[version], positions=spin_pos)
 
         energies.append(o.free_energy(eigen, [positive_kvalues, zero_kvalues], output=False))
 
 
-    return [configurations_label, energies]
+    return [two_spin, energies]
 
 def gap_iteration(parameters, kvalues, spin, spin_pos, save=True):
     # parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, imp1, imp2]
@@ -56,8 +72,8 @@ def gap_iteration(parameters, kvalues, spin, spin_pos, save=True):
     positive_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) > 0] #indices of positive k-values
     zero_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) == 0]#indicies of zero k-values
 
-    attract = [parameters[3]]*parameters[0]*parameters[1]
-    attract_tri = [parameters[4]]*parameters[0] *parameters[1]
+    attract = [parameters[3]/2]*parameters[0]*parameters[1]
+    attract_tri = [parameters[4]/2]*parameters[0] *parameters[1]
     
     start_iteration_time = timer.time()
     iteration = True
@@ -371,13 +387,16 @@ def distance(parameters, positive_kvalues, zero_kvalues, index):
         # calculate difference in free energy for parallel and anti-parallel orientation
         F_difference += [list(map(lambda x,y: x-y , F_upup, F_updown))]
     # save separation distances of impurities for later plotting
-    distances = list(map(lambda x: x-4, np.arange(4,11-3) ))
+    distances = np.array(list(map(lambda x: x-4, np.arange(4,51-3) )))
 
     # calculate F difference from analytical expression
-    inter_results = list(map(analytical.main, distances))
-
+    inter_results = np.array(list(map(analytical.main, [51]*len(distances), [1]*len(distances), [0.1]*len(distances), [2]*len(distances), [1]*len(distances), [0.04]*len(distances) , [0.01]*len(distances), distances)))
+    #inter_results = analytical.main(31, 1, 0.1, 2, 1, 0.04, 0.01, distances)
+    print(inter_results.shape)
+    print(inter_results[1])
+    
     def uu_ud(x):
-        return inter_results[x][0] - inter_results[x][1]
+        return inter_results[x][0][0] - inter_results[x][0][1]
     
     F_difference_an = list(map(uu_ud, list(range(len(inter_results)))))
 
