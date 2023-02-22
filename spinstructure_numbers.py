@@ -19,6 +19,7 @@ spin = 1/2
 
 def spin_orientation(winkel):
     res = np.array([np.round(spin*np.sin(winkel[:,1])*np.cos(winkel[:,0]),5), np.round(spin*np.sin(winkel[:,1])*np.sin(winkel[:,0]),5), np.round(spin*np.cos(winkel[:,1]),5)])
+    res = res + 0
     return res
 
 def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotting=False):
@@ -207,21 +208,23 @@ def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotti
     k_values = np.array(np.meshgrid(np.arange(-np.pi, np.pi ,2*np.pi/(sites)),np.arange(-np.pi, np.pi ,2*np.pi/(sites)),np.arange(-np.pi, np.pi ,2*np.pi/(sites)),np.arange(-np.pi, np.pi ,2*np.pi/(sites)))).T.reshape(-1,4)
 
     if compare:
-        spin_orientations = np.array([[[0,1/2,0],[0,1/2,0]],[[0,1/2,0],[0,-1/2,0]]])
+        two_spin = np.array([[[0,1/2,0],[0,1/2,0]],[[0,1/2,0],[0,-1/2,0]]])
         # spin_orientations = [[[1/2,0,0],[1/2,0,0]],[[1/2,0,0],[0,0,1/2]],[[1/2,0,0],[0,0,-1/2]]]
         spin_position = np.array([[0,0], [distance+1,0]])
 
     else:
         spin_position = np.array([[1,0], [distance+1,0]])
+        step = 4 # number of intervals to dicretisize the spherical coordinates
         # find all angle combinations for discretisized spherical coordinates
-        angle = np.array(np.meshgrid(np.arange(0, np.pi, np.pi/4), np.arange(-np.pi, np.pi, np.pi/4))).T.reshape(-1,2)
+        angle = np.array(np.meshgrid(np.arange(0, np.pi, np.pi/step), np.arange(-np.pi, np.pi, np.pi/step))).T.reshape(-1,2)
         # calculate all possible orientations based on those angle for one spin
         one_spin = spin_orientation(angle).T
         # find all possible combinations of two arrays with length of the angle combinations (aka. number of possible directions of one spin)
         combo = np.array(np.meshgrid(range(angle.shape[0]),range(angle.shape[0]))).T.reshape(-1,2)
         # find all possible ways to combine two spins with all directions allowed by the previous calculated angle combinations
-        two_spin = np.array([ one_spin[combo[:,0]] , one_spin[combo[:,1]] ]) #shape = (2, possible directions **2, 3)
-        
+        two_spin = np.unique(np.array([ one_spin[combo[:,0]] , one_spin[combo[:,1]] ]), axis=1) #shape = (2, possible directions **2, 3)
+
+        spin_orientation(angle).T
         spin_orientations = np.array([[[0,1/2,0],[0,1/2,0]], [[1/2,0,0],[1/2,0,0]], [[0,-1/2,0],[0,1/2,0]], [[-1/2,0,0],[1/2,0,0]], [[0,1/2,0],[0,-1/2,0]], [[1/2,0,0],[-1/2,0,0]], 
         [[1/2,0,0],[0,1/2,0]], [[0,1/2,0],[1/2,0,0]], [[-1/2,0,0],[0,1/2,0]], [[0,-1/2,0],[1/2,0,0]], [[1/2,0,0],[0,-1/2,0]], [[0,1/2,0],[-1/2,0,0]],
         [[1/2,0,0],[0,0,1/2]], [[1/2,0,0],[0,0,-1/2]], [[-1/2,0,0],[0,0,1/2]], [[-1/2,0,0],[0,0,-1/2]], [[0,1/2,0],[0,0,1/2]], [[0,-1/2,0],[0,0,1/2]],
@@ -250,72 +253,50 @@ def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotti
     D_y_pospos_result = D_y_pospos(energy_pm_pp, energy_mp_pp, phase3_factor, position_prefactor)
     D_y_negpos_result = D_y_negpos(energy_pm, energy_mp, phase3_factor, position_prefactor)
     
-    configurations_label = []        
 
     heisenberg = two_spin[0] * two_spin[1] #shape = (3, possible directions **2)
+    dm = two_spin[0][:,2] * two_spin[1][:,0] - two_spin[0][:,0] * two_spin[1][:,2] # shape= (possible directions **2)
+    rest = two_spin[0][:,1] * two_spin[1][:,0] + two_spin[0][:,0]*two_spin[1][:,1] # shape= (possible directions **2)
 
-    #calculate free energy for all spin configurations ##and make labels for later plotting
-    for spin in (spin_orientations):
-        heisenberg = np.reshape(np.array([spin[0][0]*spin[1][0] , spin[0][1]*spin[1][1] , spin[0][2]*spin[1][2]]),(3,1))
-        version_label = []
-        for site in range(len(spin)):
-            index = [i for i, element in enumerate(spin[site]) if element != 0][0]
-            if index == 0: 
-                if spin[site][index] > 0: 
-                    version_label += ['→']
-                else: version_label += ['←']
-            if index == 1:
-                if spin[site][index] > 0: version_label += ['x']
-                else: version_label += ['.']
-            if index == 2:
-                if spin[site][index] > 0: version_label += ['↑']
-                else: version_label += ['↓']
+    J_vec = sum(J_pospos_result.T) + sum(J_negpos_result.T)
+    D_y = sum(D_y_negpos_result) + sum(D_y_pospos_result)
+    Gamma = sum(gamma_result)
 
-        configurations_label.append(version_label)
+    all_F = sum((J_vec * heisenberg).T) + D_y * dm  + Gamma *rest 
+    #print(min(all_F), combo[np.where(all_F == min(all_F))], angle)
 
-        # sumy = sum(J_pospos_result[1]*heisenberg[1])
-        # sumx = sum(J_pospos_result[0]*heisenberg[0])
-        # sumz = sum(J_pospos_result[2]*heisenberg[2])
-        # J_p_res = sumx + sumy + sumz
-        
-        # sumy = sum(J_negpos_result[1]*heisenberg[1])
-        # sumx = sum(J_negpos_result[0]*heisenberg[0]) 
-        # sumz = sum(J_negpos_result[2]*heisenberg[2])
-        # J_n_res = sumx + sumy + sumz
-
-        J_p_res = sum(sum(heisenberg*J_pospos_result))
-        J_n_res = sum(sum(heisenberg*J_negpos_result))
-
-        J_vec.append(J_p_res+J_n_res)
-
-        D_p_res = sum(D_y_pospos_result*(spin[0][2]*spin[1][0]- spin[0][0]*spin[1][2]))
-        D_n_res = sum(D_y_negpos_result*(spin[0][2]*spin[1][0]- spin[0][0]*spin[1][2]))
-        
-        D_y.append(D_n_res + D_p_res)
-
-        g_res = sum(gamma_result*(spin[0][1]*spin[1][0]+ spin[0][0]*spin[1][1]))
-        Gamma.append(g_res)
-
-        all_F.append(J_n_res + J_p_res + D_n_res + D_p_res + g_res)
-        
-    labels =[]
-    for entry in configurations_label:
-        labels += ['('+entry[0]+entry[1]+')']
-    
     if plotting: 
-        plt.plot(D_y, label=r'$D_y$')
-        plt.plot(J_vec, label=r'$J$')
-        plt.plot(Gamma, label=r'$\Gamma$')
-        plt.xticks(range(len(spin_orientations)), labels, rotation=45)
+        
+        labels = ['('+str([round(x,3) for x in angle[element[0]]])+','+str([round(x,3) for x in angle[element[1]]])+')' for element in combo]
+    
+        plt.plot(D_y*dm, label=r'$D_y$')
+        plt.plot(sum((J_vec * heisenberg).T), label=r'$J$')
+        plt.plot(Gamma*rest, label=r'$\Gamma$')
+        plt.xticks(range(len(combo)), labels, rotation=90)
         plt.legend()
         plt.grid()
+        plt.tight_layout()
         parameters = [sites, mu, cps_1, cps_3, gamma, jott, spin_position[0][0], spin_position[1][0]]
         name = 'JDG_analytical/coefficient_relations'
         for element in parameters:
             name += '_'+str(np.round(element,2))
         name += '.png'
         plt.savefig(name)
-        # plt.show()
+        plt.show()
+        plt.clf()
+        
+        plt.plot(all_F)
+        plt.xlabel('spin configuration')
+        plt.ylabel('free energy in 1/t')
+        plt.xticks(range(len(combo)), labels, rotation=90)
+        plt.title('analytical free energy for different spin-orientations of two impurity spins \n for '+str(parameters[0])+r' sites with $U=$'+str(parameters[2])+r' and $V=$'+str(parameters[3])+', J='+str(parameters[5])+r', $\gamma=$'+str(round(parameters[4],2)))
+        plt.tight_layout()
+        plt.grid()
+        name = 'analytical spinstructure/analytical_spinstructure'
+        for element in parameters:
+            name += '_'+str(np.round(element,2))
+        name += '.png'
+        plt.savefig(name)
         plt.clf()
         
         # plt.plot(all_F)
@@ -332,10 +313,10 @@ def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotti
         # plt.savefig(name)
         # plt.clf()
 
-    return all_F, J_vec, D_y, Gamma, spin_orientations
+    return all_F, J_vec, D_y, Gamma, two_spin #spin_orientations
 
 if __name__ == '__main__':
     start = timer.time()
 
-    result = main(11, 1, 0.1, 2, 1, 0.04, 0.01, 2, compare=False, plotting=True)
+    result = main(21, 1, 0.1, 2, 1, 0.04, 0.01, 2, compare=False, plotting=True)
     print('total duration ', round(timer.time()-start, 4))
