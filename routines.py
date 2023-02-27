@@ -15,51 +15,28 @@ def spin_loop(parameters, kvalues, spin_pos, iteration=False):
 
     def spin_orientation(winkel):
         res = np.array([np.round(spin*np.sin(winkel[:,0])*np.cos(winkel[:,1]),5), np.round(spin*np.sin(winkel[:,0])*np.sin(winkel[:,1]),5), np.round(spin*np.cos(winkel[:,0]),5)])
-        return res
+        return res +0
+
+    step = 2 # number of intervals to dicretisize the spherical coordinates
+    # find all angle combinations for discretisized spherical coordinates
+    angle = np.array(np.meshgrid(np.arange(-np.pi, np.pi+np.pi/step, np.pi/step), np.arange(-np.pi, np.pi+np.pi/step, np.pi/step))).T.reshape(-1,2)
+    # calculate all possible orientations based on those angle for one spin
+    one_spin = spin_orientation(angle).T
+    one_spin = np.unique(one_spin, axis=0) #select only spins that are unique
+    # find all possible combinations of two arrays with length of the angle combinations (aka. number of possible directions of one spin)
+    combo = np.array(np.meshgrid(range(one_spin.shape[0]),range(one_spin.shape[0]))).T.reshape(-1,2)
+    # find all possible ways to combine two spins with all directions allowed by the previous calculated angle combinations
+    two_spin = np.array(one_spin[combo]) #shape = (possible directions **2, 2, 3)   
 
     positive_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) > 0] #indices of positive k-values
     zero_kvalues = [kvalues.index(element) for element in kvalues if round(element,6) == 0]#indicies of zero k-values
     energies = []
-
-    step = 4 # number of intervals to dicretisize the spherical coordinates
-    # find all angle combinations for discretisized spherical coordinates
-    angle = np.array(np.meshgrid(np.arange(0, np.pi, np.pi/step), np.arange(-np.pi, np.pi, np.pi/step))).T.reshape(-1,2)
-    # calculate all possible orientations based on those angle for one spin
-    one_spin = spin_orientation(angle).T
-    # find all possible combinations of two arrays with length of the angle combinations (aka. number of possible directions of one spin)
-    combo = np.array(np.meshgrid(range(angle.shape[0]),range(angle.shape[0]))).T.reshape(-1,2)
-    # find all possible ways to combine two spins with all directions allowed by the previous calculated angle combinations
-    two_spin = np.unique(np.array([ one_spin[combo[:,0]] , one_spin[combo[:,1]] ]), axis=1) #shape = (2, possible directions **2, 3)        
-
-    configurations = [[[0,1/2,0],[0,1/2,0]], [[1/2,0,0],[1/2,0,0]], [[0,-1/2,0],[0,1/2,0]], [[-1/2,0,0],[1/2,0,0]], [[0,1/2,0],[0,-1/2,0]], [[1/2,0,0],[-1/2,0,0]], 
-    [[1/2,0,0],[0,1/2,0]], [[0,1/2,0],[1/2,0,0]], [[-1/2,0,0],[0,1/2,0]], [[0,-1/2,0],[1/2,0,0]], [[1/2,0,0],[0,-1/2,0]], [[0,1/2,0],[-1/2,0,0]],
-    [[1/2,0,0],[0,0,1/2]], [[1/2,0,0],[0,0,-1/2]], [[-1/2,0,0],[0,0,1/2]], [[-1/2,0,0],[0,0,-1/2]], [[0,1/2,0],[0,0,1/2]], [[0,-1/2,0],[0,0,1/2]],
-    [[0,1/2,0],[0,0,-1/2]], [[0,-1/2,0],[0,0,-1/2]], [[0,0,1/2],[0,0,1/2]],  [[0,0,-1/2],[0,0,1/2]],  [[0,0,1/2],[0,0,-1/2]],  [[0,0,-1/2],[0,0,-1/2]]]
-
-    configurations_label = list(range(len(two_spin)))
         
-    for version in (range(len(two_spin))):
-        # version_label = []
-
-        # for site in range(len(configurations[version])):
-        #     index = [i for i, element in enumerate(configurations[version][site]) if element != 0][0]
-        #     if index == 0: 
-        #         if configurations[version][site][index] > 0: 
-        #             version_label += ['→']
-        #         else: version_label += ['←']
-        #     if index == 1:
-        #         if configurations[version][site][index] > 0: version_label += ['x']
-        #         else: version_label += ['.']
-        #     if index == 2:
-        #         if configurations[version][site][index] > 0: version_label += ['↑']
-        #         else: version_label += ['↓']
-
-        # configurations_label.append(version_label)
-        
+    for spin1, spin2 in two_spin:
         if iteration:
-            eigen, gap = gap_iteration(parameters, kvalues, two_spin[version], spin_pos)
+            eigen, gap = gap_iteration(parameters, kvalues, [spin1, spin2], spin_pos)
         else: 
-            eigen = H_diag.diagonalize_hamiltonian(parameters, two_spin[version], positions=spin_pos)
+            eigen = H_diag.diagonalize_hamiltonian(parameters, [spin1, spin2], positions=spin_pos)
 
         energies.append(o.free_energy(eigen, [positive_kvalues, zero_kvalues], output=False))
 
@@ -311,10 +288,10 @@ def rkky_study(parameters, all_kvalues, spin_orientation, spin_positions, iterat
             eigen = load(name)
             gap = [[parameters[3]]*parameters[0]*parameters[1], [parameters[4]]*parameters[0]*parameters[1]] 
 
-        def H_coeffi(x):
-            return H_diag.operator_coefficients(eigen,x)
-        coeffis = list(map(H_coeffi, list(range(parameters[1]))))
-        
+        # def H_coeffi(x):
+        #     return H_diag.operator_coefficients(eigen,x)
+        # coeffis = list(map(H_coeffi, list(range(parameters[1]))))
+        coeffis = H_diag.operator_coefficients(eigen, 6)
         # coeffis = []
         # for k in range(parameters[1]):
         #     coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]] 
