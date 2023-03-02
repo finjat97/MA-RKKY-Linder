@@ -7,33 +7,55 @@ from tqdm import tqdm
 from routines import spin_loop as sl 
 
 def plot_gs(y_values, x_values, y_axis, para):
-    labels =[]
-    for entry in y_axis:
-        labels += ['('+entry[0]+entry[1]+')']
+
+    labels = makelabel(y_axis)
     
     name = 'groundstate/gs'
     for element in para:
         name += '_'+str(np.round(element,2))
     name += '.png'
 
-    plt.grid() 
-    # for point in range(len(x_values)):
-    #     plt.scatter(x_values[point], y_values[point])
-    #     plt.scatter(x_values[point], y_values[point], marker=labels[y_values[point]])
-    plt.scatter(x_values, y_values, label='groundstate')
+    def find_alphabeta(config):
+        config = config*2
+        
+        sign3 = np.arccos(np.sum(config[:,0]* config[:,1], axis=1))
+        sign3 = np.cos(sign3)/np.absolute(np.cos(sign3))
 
-    plt.yticks(range(len(y_axis)), labels, rotation=0)
+        config = np.absolute(config)
+        gamma = np.arccos(np.sum(config[:,0]* config[:,1], axis=1))
+        gamma = np.round((gamma - np.pi/4)/ (np.pi/4), 4)
+
+        return gamma, sign3
+
+    gamma, sign = find_alphabeta(y_axis[y_values])   
+
+    positive = np.where(sign > 0)
+    negative = np.where(sign < 0)
+
+    labels = [str(row[0])+ ' '+str(row[1]) for row in np.round(y_axis[y_values],3)]
+
+    plt.scatter(x_values[positive], gamma[positive], color='red', label='pos' )
+    plt.scatter(x_values[negative], gamma[negative], color='blue', label='neg')
+
+    #plt.yticks(range(len(labels)), labels, rotation=0)
     plt.xticks(x_values)
-    plt.ylabel('spin configuration')
+    plt.ylabel('colinearity of spin configuration')
     plt.xlabel('impurity separation distance in a')
     #para = [sites_x, sites_y, mu, cps, tri, gamma, jott, 0, 0] 
-    plt.title('Groundstate spin configuration for different distances \n for N = '+str(para[0]) + r', $\mu =$ '+str(para[2])+ r', $V=$'+str(para[3])+r', $U=$'+str(para[4]) + r', $\gamma=$'+str(para[5]) + r', $J=$'+str(para[6]) )
+    plt.title('Groundstate spin configuration for different distances \n for N = '+str(para[0]) + r', $\mu =$ '+str(para[2])+ r', $U=$'+str(para[3])+r', $V=$'+str(para[4]) + r', $\gamma=$'+str(para[5]) + r', $J=$'+str(para[6]) )
     plt.legend()
+    plt.grid()
     plt.tight_layout()
     plt.savefig(name)
-    #plt.show()
+    plt.show()
 
     return True
+
+def makelabel(config):
+
+    labels = [str(row[:3])+ ' '+str(row[3:]) for row in np.concatenate(config, axis=1)]
+    
+    return labels
 
 def main(sites_x, sites_y, mu, cps, tri, gamma, jott):
 
@@ -42,8 +64,8 @@ def main(sites_x, sites_y, mu, cps, tri, gamma, jott):
     distances = []
 
     #determine different impurity positions depending on system size; starting at site 10 to avoid edge effects
-    for y in range(10,sites_x-10, 1):
-        spin_positions.append([10,y])
+    for y in range(5,sites_x-5, 1):
+        spin_positions.append([5,y])
     
     parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, 0, 0] 
     kvalues = list(np.arange(-np.pi, np.pi ,2*np.pi/(sites_y))) 
@@ -58,7 +80,7 @@ def main(sites_x, sites_y, mu, cps, tri, gamma, jott):
         #collecting all groundstate indices in one list; all indices
         groundstates.append(gs)
         #collecting the distances with the correct degeneracy 
-        distances.append([pos[1]-10]*len(gs))
+        distances.append([pos[1]-5]*len(gs))
 
     # flattening the lists to enable easy plotting
     groundstates = np.concatenate(groundstates).ravel()
@@ -84,5 +106,5 @@ if __name__ == '__main__':
     
     args = parser.parse_args()
 
-    if main(args.sites_x, args.sites_y, args.chemical, args.attract, args.tri, args.rkky, args.soc): 
+    if main(args.sites_x, args.sites_y, args.chemical, args.attract, args.tri, args.soc, args.rkky): 
         print('total duration ', round(timer.time()-start, 4))
