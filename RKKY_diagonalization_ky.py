@@ -1,6 +1,7 @@
 import numpy as np 
 from scipy import sparse
 import csv
+from itertools import chain 
 
 def diagonalize_hamiltonian(parameters, spin, positions = [], output=False):
     eigen = []
@@ -84,19 +85,14 @@ def diagonalize_hamiltonian(parameters, spin, positions = [], output=False):
         attract_tri_down = [tri*np.cos(k_y)]*sites_x*sites_y
 
         # find entries for all sites of the system
-        site_loop = (list(map(matrix_elements, list(range(0, sites_x*4, 4)), [SOC_local]*len(range(0, sites_x*4, 4)), [SOC_nn]*len(range(0, sites_x*4, 4)), [off_diag_ham]*len(range(0, sites_x*4, 4)), attract, attract_tri_up, attract_tri_down )))
-        
-        def d(x):
-            return np.array(site_loop[x][0])
-        def r(x):
-            return site_loop[x][1]
-        def c(x):
-            return site_loop[x][2]
+        site_loop = []
+        for site in range(0, sites_x*4, 4):
+            site_loop += (matrix_elements(site, SOC_local, SOC_nn, off_diag_ham, attract, attract_tri_up, attract_tri_down))
 
         # extract information from site_loop and flatten resulting lists of arrays
-        data = np.concatenate(list(map(d, list(range(sites_x))))).ravel()
-        row_index = np.concatenate(list(map(r, list(range(sites_x))))).ravel()
-        column_index = np.concatenate(list(map(c, list(range(sites_x))))).ravel()
+        data = list(chain(*site_loop[0::3])) #np.concatenate(list(map(d, list(range(sites_x))))).ravel()
+        row_index = list(chain(*site_loop[1::3])) #np.concatenate(list(map(r, list(range(sites_x))))).ravel()
+        column_index = list(chain(*site_loop[2::3])) #np.concatenate(list(map(c, list(range(sites_x))))).ravel()
         # create matrix from obtained information
         matrix = sparse.csr_matrix((data, (row_index, column_index))).todense()
 
@@ -135,5 +131,5 @@ def operator_coefficients(diagonal, k):
 
     return u_up, u_down, v_up, v_down
 
-# diag = diagonalize_hamiltonian([20, 15, 0.5, 0.5, 0.1, 0.15, 2, 3, 7],  [[0,1/2,0],[1/2,0,0]])
+diag = diagonalize_hamiltonian([20, 15, 0.5, 0.5, 0.1, 0.15, 2, 3, 7],  [[0,1/2,0],[1/2,0,0]])
 # operator_coefficients(diag, 5)
