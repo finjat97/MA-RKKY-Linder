@@ -79,7 +79,7 @@ def diagonalize_hamiltonian(parameters, spin, positions = [], output=False):
         SOC_local = [-2*gamma*np.sin(k_y), -2*gamma*np.sin(k_y)]
         SOC_nn = [-gamma, gamma]
         off_diag_ham = [2*element *np.cos(k_y) for element in [-hopping, -hopping , hopping, hopping]]
-        attract = [cps*np.cos(k_y)]*sites_x*sites_y
+        attract = [cps]*sites_x*sites_y
         attract_tri_up = [tri*np.cos(k_y)]*sites_x*sites_y
         attract_tri_down = [tri*np.cos(k_y)]*sites_x*sites_y
 
