@@ -17,7 +17,7 @@ def spin_loop(parameters, kvalues, spin_pos, iteration=False):
         res = np.array([np.round(spin*np.sin(winkel[:,0])*np.cos(winkel[:,1]),5), np.round(spin*np.sin(winkel[:,0])*np.sin(winkel[:,1]),5), np.round(spin*np.cos(winkel[:,0]),5)])
         return res +0
 
-    step = 2 # number of intervals to dicretisize the spherical coordinates
+    step = 4 # number of intervals to dicretisize the spherical coordinates
     # find all angle combinations for discretisized spherical coordinates
     angle = np.array(np.meshgrid(np.arange(-np.pi, np.pi+np.pi/step, np.pi/step), np.arange(-np.pi, np.pi+np.pi/step, np.pi/step))).T.reshape(-1,2)
     # calculate all possible orientations based on those angle for one spin
@@ -170,9 +170,9 @@ def gap_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
             eigen = load(name)
             gap = [[parameters[3]]*parameters[0]*parameters[1], [parameters[4]]*parameters[0]*parameters[1]] 
 
-        def H_coeffi(x):
-            return H_diag.operator_coefficients(eigen,x)
-        coeffis = list(map(H_coeffi, list(range(parameters[1]))))
+        # def H_coeffi(x):
+        #     return H_diag.operator_coefficients(eigen,x)
+        coeffis = H_diag.operator_coefficients(eigen, 6)
 
         # coeffis = []
         # for k in range(parameters[1]):
@@ -186,13 +186,13 @@ def gap_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
         
         gap_studies_1.append(gap[0]) #singlet gap
         gap_studies_3.append(gap[1]) #triplet gap up
-        density_study.append(ldos)
+        density_study.append(ldos[0])
         # density_study_2.append(ldos_2)
         # density_study_3.append(ldos_3)
         labels.append(r'$V$ = '+str(round(triplet,3)))
         # labels_2.append('i = '+str(45))
         # labels_3.append('i = '+str(55))
-        energies.append(eigen)
+        energies.append(ldos[1])
 
         # config, free_energy = spin_loop(parameters, kvalues, parameters[-2:], iteration=False)
         # free_energies.append(free_energy)
@@ -367,7 +367,7 @@ def distance(parameters, positive_kvalues, zero_kvalues, index):
     distances = np.array(list(map(lambda x: x-4, np.arange(4,51-3) )))
 
     # calculate F difference from analytical expression
-    inter_results = np.array(list(map(analytical.main, [51]*len(distances), [1]*len(distances), [0.1]*len(distances), [2]*len(distances), [1]*len(distances), [0.04]*len(distances) , [0.01]*len(distances), distances)))
+    inter_results = np.array(list(map(analytical.main, [31]*len(distances), [1]*len(distances), [0.1]*len(distances), [2]*len(distances), [1]*len(distances), [0.04]*len(distances) , [0.01]*len(distances), distances)))
     #inter_results = analytical.main(31, 1, 0.1, 2, 1, 0.04, 0.01, distances)
     print(inter_results.shape)
     print(inter_results[1])
