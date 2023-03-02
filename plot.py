@@ -6,14 +6,15 @@ from pylab import figure, cm
 # parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, imp1, imp2]
 
 def density(eigen, y_data, site, parameters, labels, call, output=False):
+    print(type(y_data[0]))
 
     if type(y_data[0]) is list:
         for element in range(len(y_data)):
-            plt.plot(np.arange(eigen[element][0][0][0],eigen[element][0][0][-1]+0.01,0.01), y_data[element], label=labels[element])
+            plt.plot(eigen[element], y_data[element], label=labels[element])
         
 
     else: 
-        plt.plot(np.arange(eigen[0][0][0],eigen[0][0][-1]+0.2,0.01), y_data, label=r'$\gamma$ ='+str(round(parameters[5],2)) + ', J= '+str(round(parameters[6],2))+' and i='+str(round(parameters[7],2))+','+str(round(parameters[8],2)))
+        plt.plot(np.arange(eigen[0][0][0],eigen[0][0][-1]+0.2,0.01), y_data)#, label=r'$\gamma$ ='+str(round(parameters[5],2)) + ', J= '+str(round(parameters[6],2))+' and i='+str(round(parameters[7],2))+','+str(round(parameters[8],2)))
     
     
     plt.title('LDOS for site '+str(site)+' in system '+str(round(parameters[0],2))+'x'+str(round(parameters[1],2))+'\n'+r' $U=$'+str(round(parameters[3],2))+r', $V=$'+str(round(parameters[4],2))+r', $\gamma=$'+str(round(parameters[5],2))+r', $J=$'+str(round(parameters[6],2))+r', $i=$'+str(round(parameters[7],2))+', '+str(round(parameters[8],2)))
@@ -83,7 +84,7 @@ def spinphase(free_energy, spin_config, parameters, legend, output=False):
 
     labels =[]
     for entry in spin_config:
-        labels += ['('+entry[0]+entry[1]+')']
+        labels += ['('+str(entry[0])+str(entry[1])+')']
     # for element in spin_config:
     #     component = element.index()
 
