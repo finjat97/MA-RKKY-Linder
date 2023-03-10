@@ -1,11 +1,9 @@
 ## calculate the analytically derived spin structure with experimental values
 import numpy as np
 import time as timer
-from joblib import dump, load
+#from joblib import dump, load
 from tqdm import tqdm 
 import matplotlib.pyplot as plt
-from numba import jit, complex128, float64
-from functools import reduce
 
 # sites = 11 #lattice sites
 # t = 1 #hopping
@@ -205,8 +203,8 @@ def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotti
     D_y, Gamma, J_vec = [], [], []
 
     # constructing all combinations of k_values for later summation, type: 2d list of length 81, each entry of length 4; type(k_values)=np.ndarray
-    k_values = np.array(np.meshgrid(np.arange(-np.pi, np.pi ,2*np.pi/(sites)),np.arange(-np.pi, np.pi ,2*np.pi/(sites)),np.arange(-np.pi, np.pi ,2*np.pi/(sites)),np.arange(-np.pi, np.pi ,2*np.pi/(sites)))).T.reshape(-1,4)
-
+    k_values = np.array(np.meshgrid(np.arange(-np.pi, np.pi+2*np.pi/(sites) ,2*np.pi/(sites)),np.arange(-np.pi, np.pi+2*np.pi/(sites) ,2*np.pi/(sites)), np.arange(-np.pi, np.pi+2*np.pi/(sites) ,2*np.pi/(sites)),np.arange(-np.pi, np.pi+2*np.pi/(sites) ,2*np.pi/(sites)))).T.reshape(-1,4)
+    
     if compare:
         two_spin = np.array([[[0,1/2,0],[0,1/2,0]],[[0,1/2,0],[0,-1/2,0]]])
         # spin_orientations = [[[1/2,0,0],[1/2,0,0]],[[1/2,0,0],[0,0,1/2]],[[1/2,0,0],[0,0,-1/2]]]
@@ -214,7 +212,7 @@ def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotti
 
     else:
         spin_position = np.array([[1,0], [distance+1,0]])
-        step = 2 # number of intervals to dicretisize the spherical coordinates
+        step = 4 # number of intervals to dicretisize the spherical coordinates
         # find all angle combinations for discretisized spherical coordinates
         angle = np.array(np.meshgrid(np.arange(0, np.pi, np.pi/step), np.arange(-np.pi, np.pi, np.pi/step))).T.reshape(-1,2)
         # calculate all possible orientations based on those angle for one spin
@@ -223,11 +221,18 @@ def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotti
         combo = np.array(np.meshgrid(range(angle.shape[0]),range(angle.shape[0]))).T.reshape(-1,2)
         # find all possible ways to combine two spins with all directions allowed by the previous calculated angle combinations
         two_spin = np.unique(np.array([ one_spin[combo[:,0]] , one_spin[combo[:,1]] ]), axis=1) #shape = (2, possible directions **2, 3)
-
+    
         spin_orientations = np.array([[[0,1/2,0],[0,1/2,0]], [[1/2,0,0],[1/2,0,0]], [[0,-1/2,0],[0,1/2,0]], [[-1/2,0,0],[1/2,0,0]], [[0,1/2,0],[0,-1/2,0]], [[1/2,0,0],[-1/2,0,0]], 
         [[1/2,0,0],[0,1/2,0]], [[0,1/2,0],[1/2,0,0]], [[-1/2,0,0],[0,1/2,0]], [[0,-1/2,0],[1/2,0,0]], [[1/2,0,0],[0,-1/2,0]], [[0,1/2,0],[-1/2,0,0]],
         [[1/2,0,0],[0,0,1/2]], [[1/2,0,0],[0,0,-1/2]], [[-1/2,0,0],[0,0,1/2]], [[-1/2,0,0],[0,0,-1/2]], [[0,1/2,0],[0,0,1/2]], [[0,-1/2,0],[0,0,1/2]],
         [[0,1/2,0],[0,0,-1/2]], [[0,-1/2,0],[0,0,-1/2]], [[0,0,1/2],[0,0,1/2]],  [[0,0,-1/2],[0,0,1/2]],  [[0,0,1/2],[0,0,-1/2]],  [[0,0,-1/2],[0,0,-1/2]]])
+    
+
+    #find relative sign of the two spins
+    # a = numpy.array([0, 3, 0, 1, 0, 1, 2, 1, 0, 0, 0, 0, 1, 3, 4])
+    # unique, counts = numpy.unique(a, return_counts=True)
+
+
     
     # position dependent prefactor for all k_values; right now for 2d; WARNING: might be wrong calculation, because periodicity is not yet seen
     position_prefactor = position(k_values, spin_position[0], spin_position[1])
