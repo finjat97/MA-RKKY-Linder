@@ -210,7 +210,7 @@ def free_energy(eigen, kvalues, output=False):
     return F
 
 def interband_pairing(eigen, kvalues, coeffis):
-
+      
     for site in range(len(eigen[0][0])//4):
         ## triplet gap
         sum_3_up_next, sum_3_down_next = 0,0 # , sum_3_pre , 0
@@ -224,16 +224,16 @@ def interband_pairing(eigen, kvalues, coeffis):
                 u_up, u_down, v_up, v_down = coeffis[k][0], coeffis[k][1], coeffis[k][2], coeffis[k][3]
                 # going through all eigenvalues
                 for value in range(len(eigen[0][0])):
-                    sum_3_up_next += ((u_up[site_next][0,value]*np.conj(v_up[site][0,value])-u_down[site][0,value]*np.conj(v_down[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_down[site][0,value]*np.conj(v_down[site_next][0,value]))
-                    sum_3_down_next += ((u_down[site_next][0,value]*np.conj(v_down[site][0,value])-u_up[site][0,value]*np.conj(v_up[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_up[site][0,value]*np.conj(v_up[site_next][0,value]))
+                    sum_3_up_next += ((u_up[site_next][value]*np.conj(v_up[site][value])-u_down[site][value]*np.conj(v_down[site_next][value]))*fermi_dis(eigen[k][0][value]) +u_down[site][value]*np.conj(v_down[site_next][value]))
+                    sum_3_down_next += ((u_down[site_next][value]*np.conj(v_down[site][value])-u_up[site][value]*np.conj(v_up[site_next][value]))*fermi_dis(eigen[k][0][value]) +u_up[site][value]*np.conj(v_up[site_next][value]))
 
             for k in kvalues[1]: # k=0
                 u_up, u_down, v_up, v_down = coeffis[k][0], coeffis[k][1], coeffis[k][2], coeffis[k][3]
                 for value in range(len(eigen[0][0])):
                     # selecting only positive eigenvalues
                     if eigen[k][0][value] > 0: 
-                        sum_3_up_next += ((u_up[site_next][0,value]*np.conj(v_up[site][0,value])-u_down[site][0,value]*np.conj(v_down[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_down[site][0,value]*np.conj(v_down[site_next][0,value]))
-                        sum_3_down_next += ((u_down[site_next][0,value]*np.conj(v_down[site][0,value])-u_up[site][0,value]*np.conj(v_up[site_next][0,value]))*fermi_dis(eigen[k][0][value]) +u_up[site][0,value]*np.conj(v_up[site_next][0,value]))
+                        sum_3_up_next += ((u_up[site_next][value]*np.conj(v_up[site][value])-u_down[site][value]*np.conj(v_down[site_next][value]))*fermi_dis(eigen[k][0][value]) +u_down[site][value]*np.conj(v_down[site_next][value]))
+                        sum_3_down_next += ((u_down[site_next][value]*np.conj(v_down[site][value])-u_up[site][value]*np.conj(v_up[site_next][value]))*fermi_dis(eigen[k][0][value]) +u_up[site][value]*np.conj(v_up[site_next][value]))
             
             if site == 0: first_up, first_down = sum_3_up_next, sum_3_down_next
 
