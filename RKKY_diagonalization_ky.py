@@ -105,31 +105,31 @@ def diagonalize_hamiltonian(parameters, spin, positions = [], output=False):
         return res2
 
     #calculate eigenvectors and eigenvalues for all allowed k values
+    #print('k_values ', k_values.shape)
     eigen = (list(map(k_matrices, k_values)))
-    eigen2 = np.array(eigen) #shape = (N_y, 4*N_x, 4*n_x +1), first column is eigenvalues, N_y corresponds to k-values
+    eigen2 = np.array(eigen) #shape = (N_y, 4*N_x, 4*n_x +1), first column on third axis is eigenvalues, N_y is number of k-values
 
     return eigen2
 
 def operator_coefficients(diagonal, k):
     ## define u and v to get hamiltonian on form of Fermi-gas (see notes "realspace.pdf")
-    u_up, u_down, v_up, v_down = [], [], [], [] #lists of lists
+    # u_up, u_down, v_up, v_down = [], [], [], [] #lists of lists
 
     # u_up += [np.conj(element) for element in diagonal[k][1][range(0, len(diagonal[0][0]),4)]]#appending N_x coefficients for one site, one k and all energy eigenvalues
     # u_down += [np.conj(element) for element in diagonal[k][1][np.add(range(0, len(diagonal[0][0]),4),1)]]
     # v_up += [np.conj(element) for element in diagonal[k][1][np.add(range(0, len(diagonal[0][0]),4),2)]]
     # v_down += [np.conj(element) for element in diagonal[k][1][np.add(range(0, len(diagonal[0][0]),4),3)]]
+    u_up_indices = np.arange(0+1, diagonal.shape[2], 4)
+    u_down_indices = np.arange(1+1, diagonal.shape[2], 4)
+    v_up_indices = np.arange(2+1, diagonal.shape[2], 4)
+    v_down_indices = np.arange(3+1, diagonal.shape[2], 4)
 
-    u_up_indices = np.arange(0, diagonal.shape[2]-1, 4)
-    u_down_indices = np.arange(1, diagonal.shape[2]-1, 4)
-    v_up_indices = np.arange(2, diagonal.shape[2]-1, 4)
-    v_down_indices = np.arange(3, diagonal.shape[2]-1, 4)
-
-    u_up = diagonal[:, diagonal.shape[1]//2: , u_up_indices]
+    u_up = diagonal[:, diagonal.shape[1]//2:, u_up_indices] # shape = (sites_y, positive eigenenergies , sites_x)
     u_down = diagonal[:, diagonal.shape[1]//2: , u_down_indices]
     v_up = diagonal[:, diagonal.shape[1]//2: , v_up_indices]
     v_down = diagonal[:, diagonal.shape[1]//2: , v_down_indices]
 
     return u_up, u_down, v_up, v_down
 
-diag = diagonalize_hamiltonian([20, 15, 0.5, 0.5, 0.1, 0.15, 2, 3, 7],  [[0,1/2,0],[1/2,0,0]])
+# diag = diagonalize_hamiltonian([21, 15, 0.5, 0.5, 0.1, 0.15, 2, 3, 7],  [[0,1/2,0],[1/2,0,0]])
 # operator_coefficients(diag, 5)
