@@ -1,2 +1,2 @@
 # MA-RKKY-Linder
-Masteroppgave about RKKY interaction in superconductors supervised by Jacob Linder
+Master's thesis about RKKY interaction in unconventional superconductors supervised by Dr. Jacob Linder
