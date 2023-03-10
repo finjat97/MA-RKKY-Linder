@@ -5,6 +5,7 @@ import argparse
 
 from tqdm import tqdm 
 from routines import spin_loop as sl 
+from joblib import dump
 
 def plot_gs(y_values, x_values, y_axis, para):
 
@@ -64,7 +65,7 @@ def main(sites_x, sites_y, mu, cps, tri, gamma, jott):
     distances = []
 
     #determine different impurity positions depending on system size; starting at site 10 to avoid edge effects
-    for y in range(5,sites_x-5, 1):
+    for y in range(10,sites_x-10, 1):
         spin_positions.append([5,y])
     
     parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, 0, 0] 
@@ -88,6 +89,23 @@ def main(sites_x, sites_y, mu, cps, tri, gamma, jott):
 
     # plotting the groundstate over the distance; plot is saved in 'groundstate'
     plot_gs(groundstates, distances, config, parameters[:-2])
+
+    name = 'groundstate/gs'
+    for element in parameters[:-2]:
+        name += '_'+str(np.round(element,2))
+    name += '.txt'
+    name2 = 'groundstate/dis'
+    for element in parameters[:-2]:
+        name2 += '_'+str(np.round(element,2))
+    name2 += '.txt'
+    name3 = 'groundstate/spin'
+    for element in parameters[:-2]:
+        name3 += '_'+str(np.round(element,2))
+    name3 += '.txt'
+
+    dump(groundstates, name, compress=2)
+    dump(distances, name2, compress=2)
+    dump(config, name3, compress=2)
 
     return True
 
