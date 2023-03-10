@@ -367,7 +367,7 @@ def distance(parameters, positive_kvalues, zero_kvalues, index):
     distances = np.array(list(map(lambda x: x-4, np.arange(4,51-3) )))
 
     # calculate F difference from analytical expression
-    inter_results = np.array(list(map(analytical.main, [31]*len(distances), [1]*len(distances), [0.1]*len(distances), [2]*len(distances), [1]*len(distances), [0.04]*len(distances) , [0.01]*len(distances), distances)))
+    inter_results = np.array(list(map(analytical.main, [80]*len(distances), [1]*len(distances), [0.1]*len(distances), [2]*len(distances), [1]*len(distances), [0.04]*len(distances) , [0.01]*len(distances), distances)))
     #inter_results = analytical.main(31, 1, 0.1, 2, 1, 0.04, 0.01, distances)
     print(inter_results.shape)
     print(inter_results[1])
@@ -405,9 +405,7 @@ def interband(k, parameters, spin_orientation = [[0,1/2,0], [0,1/2,0]]):
         else:
             eigen = load(name)
 
-        def H_coeffi(x):
-            return H_diag.operator_coefficients(eigen,x)
-        coeffis = list(map(H_coeffi, list(range(parameters[1]))))
+        coeffis = H_diag.operator_coefficients(eigen, 6)[0]
 
         res = o.interband_pairing(eigen, k[1:], coeffis)
        
