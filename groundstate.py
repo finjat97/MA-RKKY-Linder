@@ -65,8 +65,9 @@ def main(sites_x, sites_y, mu, cps, tri, gamma, jott):
     distances = []
 
     #determine different impurity positions depending on system size; starting at site 10 to avoid edge effects
-    for y in range(10,sites_x-10, 1):
-        spin_positions.append([5,y])
+    first_site = 12
+    for y in range(first_site,sites_x-first_site, 1):
+        spin_positions.append([first_site-2,y])
     
     parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, 0, 0] 
     kvalues = list(np.arange(-np.pi, np.pi ,2*np.pi/(sites_y))) 
@@ -81,7 +82,7 @@ def main(sites_x, sites_y, mu, cps, tri, gamma, jott):
         #collecting all groundstate indices in one list; all indices
         groundstates.append(gs)
         #collecting the distances with the correct degeneracy 
-        distances.append([pos[1]-5]*len(gs))
+        distances.append([pos[1]-(first_site-2)]*len(gs))
 
     # flattening the lists to enable easy plotting
     groundstates = np.concatenate(groundstates).ravel()
