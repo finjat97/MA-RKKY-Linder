@@ -222,11 +222,8 @@ def soc_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
             eigen, gap = gap_iteration(parameters, all_kvalues[0], spin_orientation, spin_positions) # gap = [gap_singlet, gap_triplet]
         else: 
             eigen = H_diag.diagonalize_hamiltonian(parameters, spin_orientation)
-
-        def H_coeffi(x):
-            return H_diag.operator_coefficients(eigen,x)
         
-        coeffis = list(map(H_coeffi, list(range(parameters[1]))))
+        coeffis = H_diag.operator_coefficients(eigen, 6) #six is just placeholder for possible k dependence
 
         # for k in range(parameters[1]):
         #     coeffis += [H_diag.operator_coefficients(eigen,k)] #coeffi[k][u_up, u_down, v_up, v_down][site (N_x)][0,value]] 
@@ -238,9 +235,9 @@ def soc_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
         
         gap_studies_1.append(gap[0]) #singlet gap
         gap_studies_3.append(gap[1]) #triplet gap up
-        density_study.append(ldos)
+        density_study.append(ldos[0])
         labels.append(r'$\gamma$ = '+str(round(soc,2)))
-        energies.append(eigen)
+        energies.append(ldos[1])
 
         # if parameters[6] != 0: 
         #     config, free_energy = spin_loop(parameters, kvalues, parameters[-2:], iteration=False)
@@ -353,10 +350,10 @@ def distance(parameters, positive_kvalues, zero_kvalues, index):
 
     for value in tqdm(values):
         parameters[index] = value
-        F_upup, F_updown, F_analytical_uu, F_analytical_ud = [], [], [], []
-        for pos2 in np.arange(10,parameters[0]-10): #move second impurity away from first by going throught all lattice sites except edge
+        F_upup, F_updown= [], []
+        for pos2 in np.arange(15,parameters[0]-15): #move second impurity away from first by going throught all lattice sites except edge
             # calculate free energy for parallel spins in +y direction
-            eigen_upup = H_diag.diagonalize_hamiltonian(parameters, spin[0], positions=[4,pos2])
+            eigen_upup = H_diag.diagonalize_hamiltonian(parameters, spin[0], positions=[14,pos2])
             F_upup.append(o.free_energy(eigen_upup, [positive_kvalues, zero_kvalues], output=False))
             ## calculate free energy for anti-parallel spins in +-y direction
             eigen_updown = H_diag.diagonalize_hamiltonian(parameters, spin[1], positions=[4,pos2])
@@ -364,24 +361,38 @@ def distance(parameters, positive_kvalues, zero_kvalues, index):
         # calculate difference in free energy for parallel and anti-parallel orientation
         F_difference += [list(map(lambda x,y: x-y , F_upup, F_updown))]
     # save separation distances of impurities for later plotting
-    distances = np.array(list(map(lambda x: x-4, np.arange(4,51-3) )))
+    distances = np.arange(15,parameters[0]-15)-14
+
+    name = 'dF/dF_dis'
+    for element in parameters:
+        name += '_'+str(np.round(element,2))
+    name += '.png'
+
+    dump(distances, name, compress=2)
+    name = 'dF/dF_dF'
+    for element in parameters:
+        name += '_'+str(np.round(element,2))
+    name += '.png'
+    dump(F_difference, name, compress=2)
 
     # calculate F difference from analytical expression
-    inter_results = np.array(list(map(analytical.main, [80]*len(distances), [1]*len(distances), [0.1]*len(distances), [2]*len(distances), [1]*len(distances), [0.04]*len(distances) , [0.01]*len(distances), distances)))
-    #inter_results = analytical.main(31, 1, 0.1, 2, 1, 0.04, 0.01, distances)
-    print(inter_results.shape)
-    print(inter_results[1])
+    # inter_results = np.array(list(map(analytical.main, [80]*len(distances), [1]*len(distances), [0.1]*len(distances), [2]*len(distances), [1]*len(distances), [0.04]*len(distances) , [0.01]*len(distances), distances)))
+    # inter_results = analytical.main(31, 1, 0.1, 2, 1, 0.04, 0.01, distances)
+    # print(inter_results.shape)
+    # print(inter_results[1])
     
-    def uu_ud(x):
-        return inter_results[x][0][0] - inter_results[x][0][1]
+    # def uu_ud(x):
+    #     return inter_results[x][0][0] - inter_results[x][0][1]
     
-    F_difference_an = list(map(uu_ud, list(range(len(inter_results)))))
+    # F_difference_an = list(map(uu_ud, list(range(len(inter_results)))))
 
-    diff = list(map(lambda x,y: x-y, F_difference[0], F_difference[1]))
-    diff += list(map(lambda x,y: x-y, F_difference[-2], F_difference[-1]))
+    # diff = list(map(lambda x,y: x-y, F_difference[0], F_difference[1]))
+    # diff += list(map(lambda x,y: x-y, F_difference[-2], F_difference[-1]))
+    diff = [np.array(F_difference[0])- np.array(F_difference[1])]
+    diff += [np.array(F_difference[-2])- np.array(F_difference[-1])]
     # return F_difference + [F_difference_an], distances, [round(element, 3) for element in values] + ['analytical'], diff #second last entry is list of labels for later plotting
-    # return F_difference, distances,  [round(element, 3) for element in values], diff
-    return F_difference_an, distances, ['analytical'], diff
+    return F_difference, distances,  [round(element, 3) for element in values], diff
+    # return F_difference_an, distances, ['analytical'], diff
 
 def interband(k, parameters, spin_orientation = [[0,1/2,0], [0,1/2,0]]):
     # parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, imp1, imp2]
