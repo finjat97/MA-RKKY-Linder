@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import time as timer
 import argparse
+import scipy.io as sio
+
 
 from tqdm import tqdm 
 from routines import spin_loop as sl 
@@ -65,7 +67,7 @@ def main(sites_x, sites_y, mu, cps, tri, gamma, jott):
     distances = []
 
     #determine different impurity positions depending on system size; starting at site 10 to avoid edge effects
-    first_site = 12
+    first_site = 15
     for y in range(first_site,sites_x-first_site, 1):
         spin_positions.append([first_site-2,y])
     
@@ -103,10 +105,18 @@ def main(sites_x, sites_y, mu, cps, tri, gamma, jott):
     for element in parameters[:-2]:
         name3 += '_'+str(np.round(element,2))
     name3 += '.txt'
+    name4 = 'groundstate/gs'
+    for element in parameters[:-2]:
+        name4 += '_'+str(np.round(element,2))
+    name4 += '.mat'
 
     dump(groundstates, name, compress=2)
     dump(distances, name2, compress=2)
     dump(config, name3, compress=2)
+
+
+    savedict = {'gs': groundstates, 'dis':distances, 'spin':config}
+    sio.savemat(name4, savedict)
 
     return True
 
