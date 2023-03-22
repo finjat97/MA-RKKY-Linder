@@ -28,7 +28,7 @@ def density(eigen, y_data, site, parameters, labels, call, output=False):
     name = 'ldos/ldos_'+str(call)
     for element in parameters:
         name += '_'+str(np.round(element,2))
-    name += '.png'
+    name += '.pdf'
     plt.savefig(name)
     
     if output: plt.show()
@@ -65,7 +65,7 @@ def gap(gap, parameters, labels, call, abs= True, output=False):
     name = 'gap_'+str(call)
     for element in parameters:
         name += '_'+str(np.round(element,2))
-    name += '.png'
+    name += '.pdf'
     plt.savefig(name)
 
     if output: plt.show()
@@ -99,7 +99,7 @@ def spinphase(free_energy, spin_config, parameters, legend, output=False):
     name = 'spinstructure'
     for element in parameters:
         name += '_'+str(np.round(element,2))
-    name += '.png'
+    name += '.pdf'
     plt.tight_layout()
     plt.savefig(name)
     if output: plt.show()
@@ -151,7 +151,7 @@ def analytical_vs_numerical(data_a, data_n, parameters_a, parameters_n, spin_con
     plt.title('numerical and analytical spin structure')
     
     plt.tight_layout()
-    plt.savefig('spinstructure_comparison.png')
+    plt.savefig('spinstructure_comparison.pdf')
     plt.clf()
     # plt.show()
 
@@ -186,7 +186,7 @@ def distance(x_values, y_values, parameters, labels, call, output=False):
     name = 'dF/dF_'+str(call)
     for element in parameters:
         name += '_'+str(np.round(element,2))
-    name += '.png'
+    name += '.pdf'
     plt.savefig(name)
     
     if output: plt.show()
