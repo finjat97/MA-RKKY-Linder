@@ -1,17 +1,11 @@
-## calculate the analytically derived spin structure with experimental values
-import numpy as np
+import numpy as np 
 import time as timer
-#from joblib import dump, load
+from joblib import dump
 from tqdm import tqdm 
 import matplotlib.pyplot as plt
+import scipy.io as sio
+import itertools
 
-# sites = 11 #lattice sites
-# t = 1 #hopping
-# gamma = 0.1 #SOC strength
-# jott = 2 #RKKY interaction strength
-# mu = 1 #chemical potential
-# cps_1 = 0.05 #singlet pairing strength, << t
-# cps_3 = 0.0 #triplet pairing strength, <<t
 
 spin = 1/2
 
@@ -21,12 +15,13 @@ def spin_orientation(winkel):
     return res
 
 def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotting=False):
-    def fermi_dis(energy): # input and return: 1d array
+    all_F = np.zeros(sites)
+
+    def fermi(energy): # input and return: 1d array
         constant = 0.01 # k_B*T
         
         return 1/ (np.exp(energy/constant)+1)
-
-    # energy including spin orbit coupling: WARNING: I changed the calculation of |\gamma|
+    
     def xi(k, heli): # input: (2,k-space) array, int; return: (k space, ) array, float
         res = -2*t*(np.cos(k[:,0])+np.cos(k[:,1])) - mu + heli*np.sqrt((gamma**2)*(k[:,1]**2 + k[:,0]**2))
         return res
@@ -37,57 +32,14 @@ def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotti
         #return np.array([[(-k[:,1]+1j*(-k[:,0]))*cps_3,cps_1], [-cps_1, (k[:,1]+1j*(-k[:,0]))*cps_3]]) 
         return [cps_1/2 + cps_3/2, cps_1/2-cps_3/2]
 
-    def E(k, heli):
+    
+    def energy(k, heli):
         if heli > 0: index = 0
         else: index = 1
         res =  np.sqrt((xi(k, heli))**2 + abs(delta(k)[index])**2)
         return res
-
-    #components of eigenvectors
-    def norm(k,heli):
-        if heli > 0: index = 0
-        else: index = heli
-        result = np.sqrt((E(k,heli) + (xi(k, heli)))**2 + abs(delta(k)[index])**2)
-        # print('delta= ', delta(k))
-        # print('E= ', E(k,heli), (xi(k, heli)))
-        # print('N= ', result)
-        if result.all() == 0: result[result == 0] = 0.0001
-        return result
-
-    def nu(k, heli):
-        normalisation = norm(k, heli)
-        res = (E(k, heli) + (xi(k, heli)))/normalisation
-        if res.all() == 0: res[res == 0] = 1
-        res = res
-        return res
-
-    def eta(k, heli):
-        if heli > 0: index = 0
-        else: index = 1
-        normalisation = norm(k, heli)
-        result = (delta(k)[index])/normalisation
-        # print('eta= ', result)
-        return result
-
-    #coefficients from the unitary transformation matrix S used in the Schrieffer-Wolff transformation
-
-    def A(k, k_2 , heli, heli_2):
-        energy = np.array(E(k, heli)-E(k_2, heli_2))
-        if energy.all() == 0.0: energy[energy==0.] = 0.001
-        return nu(k, heli).conjugate()*nu(k_2, heli_2)/energy
-
-    def B(k, k_2 , heli, heli_2):
-        energy = (E(-k, heli)-E(-k_2, heli_2))
-        if energy.all() == 0.0: energy[energy==0.] = 0.001
-        return eta(k, heli)*eta(k_2, heli_2).conjugate()/energy
-
-    def C(k, k_2 , heli, heli_2):
-        return eta(k, heli)*nu(k_2, heli_2)/(E(-k, heli)+E(k_2, heli_2))
-
-    def D(k, k_2 , heli, heli_2):
-        return nu(k, heli).conjugate()*eta(k_2, heli_2).conjugate()/(E(k, heli)+E(-k_2, heli_2))
-
-    #coefficients from the RKKY hamiltonian
+    
+     
     def a(k, k_2 , heli, heli_2):
         return nu(k, heli).conjugate()*nu(k_2, heli_2)
 
@@ -100,111 +52,69 @@ def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotti
     def d(k, k_2 , heli, heli_2):
         return nu(k, heli).conjugate()*eta(k_2, heli_2).conjugate()
 
-    # energy prefactors for the spin structure
-    def F_minus(k, heli, heli_2):
-        factor1, factor2 = [], []
-        fermi = (fermi_dis(E(k[:,:2], heli))-fermi_dis(E(k[:,2:], heli_2)))
-        for (f1,f2) in [[A,b], [B,a], [C,d], [D,c]]:
-            factor1 += [f1(k[:,:2], k[:,2:], heli, heli_2)]
-            factor2 += [f2(k[:,2:], k[:,:2], heli_2, heli)]
-        res1 = np.array(factor1)*np.array(factor2)*fermi
-        res = (sum(res1))
-        # res = sum(map(lambda x,y: x*y*fermi, factor1, factor2))
-        
-        return res
-
-    def F_minus_pp(k, heli, heli_2):
-        factor1, factor2 = [], []
-        fermi = (fermi_dis(E(k[:,:2], heli))-fermi_dis(E(k[:,2:], heli_2)))
-        for (f1,f2) in [[A,a], [B,b], [C,c], [D,d]]:
-            factor1 += [f1(k[:,:2], k[:,2:], heli, heli_2)]
-            factor2 += [f2(k[:,2:], k[:,:2], heli_2, heli)]
-        res = (sum(np.array(factor1)*np.array(factor2)*fermi))
-        # res = sum(map(lambda x,y: x*y*fermi, factor1, factor2))
-        return res
-
-    def F_plus(k, heli, heli_2):
-        result = 0
-        fermi = (fermi_dis(E(k[:,:2], heli))+fermi_dis(E(k[:,2:], heli_2)))
-        for (f1,f2) in [[A,b], [B,a], [C,d], [D,c]]:
-            result +=fermi*f1(k[:,:2], k[:,2:], heli, heli_2)*f2(k[:,2:], k[:,:2], heli_2, heli)
-        #result = sum(result)
+    def norm(k,heli):
+        if heli > 0: index = 0
+        else: index = heli
+        result = np.sqrt((energy(k,heli) + (xi(k, heli)))**2 + abs(delta(k)[index])**2)
+        if result.all() == 0: result[result == 0] = 0.0001
         return result
 
+    def nu(k, heli):
+        normalisation = norm(k, heli)
+        res = (energy(k, heli) + (xi(k, heli)))/normalisation
+        if res.all() == 0: res[res == 0] = 1
+        res = res
+        return res
+
+    def eta(k, heli):
+        if heli > 0: index = 0
+        else: index = 1
+        normalisation = norm(k, heli)
+        result = (delta(k)[index])/normalisation
+        return result
+
+
+    def energy1(a1, a2, b1, b2, c1, c2, d1, d2, e1, e2):
+        if 0 in e2-e1: e2[np.where(e2-e1==0)] += 10**(-5)
+        energy = a1*a2 * (fermi(e1)- fermi(e2))/(e2-e1) + b1*b2* (fermi(e2)- fermi(e1))/(e1-e2)+ c1*d2*(-1)*(fermi(e2)+ fermi(e1))/(e1+e2) + d1*c2*(fermi(e1)-fermi(e2))/(e1+e2)
+        return energy
+
+    def energy2(a1, a2, b1, b2, c1, c2, d1, d2, e1, e2):
+        if 0 in e2-e1: 
+            e2[np.where(e2-e1==0)] += 10**(-5)
+        energy = a1*b2* (fermi(e1)- fermi(e2))/(e2-e1) + b1*a2* (fermi(e2)- fermi(e1))/(e1-e2) + c1*d2*(fermi(e2)+ fermi(e1))/(e1+e2) + d1*c2*(-1)*(fermi(e1)-fermi(e2))/(e1+e2)
+        return energy
+
+    def I(mplus, mminus, phi1, phi1prime):
+        ising1 = np.array([mplus + mminus, -(mplus + mminus), 1j*(mminus-mplus)])
+        ising2 = np.array([2*phi1/phi1, phi1prime**2 + np.conj(phi1)**2, - phi1prime**2 + np.conj(phi1)**2])
+        return ising1, ising2
+    
+    def D(k):
+        x = np.array([ 2j * k[:,1]/np.sqrt(k[:,0]**2 + k[:,1]**2), - 2j * k[:,3]/np.sqrt(k[:,2]**2 + k[:,3]**2) ])
+        y = np.array( [ 2j * k[:,0]/np.sqrt(k[:,0]**2 + k[:,1]**2), - 2j * k[:,2]/np.sqrt(k[:,0]**2 + k[:,1]**2)] )        
+        z = np.zeros((2,k.shape[0]))
+        return np.array([x,y,z])
+    
+    def Gamma(phi1, phi1prime, phi2, mplus, mminus):
+
+        xy = np.array([1j*(phi1prime**2 - np.conj(phi1)**2), 1j*(mminus - mplus)])
+        yx = xy
+        yz = np.array([ 2j*np.conj(phi1), -2j*phi1prime ])
+        zx = np.array([ phi2*phi1prime - np.conj(phi1) , phi2*np.conj(phi1)+phi1prime])
+        zy = np.array([ -1j*(phi2*phi1prime + np.conj(phi1)), 1j*(phi2*np.conj(phi1)+phi1prime) ])
+
+        return xy, yx, yz, zx, zy
+    
     def position(k, pos, pos_2):
-        return np.exp(-1j*((k[:,:2][:,0]-k[:,2:][:,0])*(pos[0]-pos_2[0])+(k[:,:2][:,1]-k[:,2:][:,1])*(pos[1]-pos_2[1])))
+        return np.exp(-1j*((k[:,0]-k[:,2])*(pos[0]-pos_2[0])+(k[:,1]-k[:,3])*(pos[1]-pos_2[1])))
 
-    def phase1(k):
-        abs_k1 = np.sqrt(k[:,:2][:,0]**2+k[:,:2][:,1]**2)
-        abs_k2 = np.sqrt(k[:,2:][:,0]**2+k[:,2:][:,1]**2)
-        if abs_k1.all() == 0: abs_k1[abs_k1 == 0] = 0.001
-        if abs_k2.all() == 0: abs_k2[abs_k2 == 0] = 0.001
-        return ((k[:,2:][:,1]-1j*k[:,2:][:,0])/abs_k2)**2 + ((k[:,:2][:,1]+1j*k[:,:2][:,0])/abs_k1)**2
-
-    def phase2(k):
-        abs_k1 = np.sqrt(k[:,:2][:,0]**2+k[:,:2][:,1]**2)
-        abs_k2 = np.sqrt(k[:,2:][:,0]**2+k[:,2:][:,1]**2)
-        if abs_k1.all() == 0: abs_k1[abs_k1 == 0] = 0.001
-        if abs_k2.all() == 0: abs_k2[abs_k2 == 0] = 0.001
-        return ((k[:,2:][:,1]-1j*k[:,2:][:,0])/abs_k2) * ((k[:,:2][:,1]+1j*k[:,:2][:,0])/abs_k1)
-
-    def phase3(k):
-        abs_k1 = np.sqrt(k[:,:2][:,0]**2+k[:,:2][:,1]**2)
-        abs_k2 = np.sqrt(k[:,2:][:,0]**2+k[:,2:][:,1]**2)
-        if abs_k1.all() == 0: abs_k1[abs_k1 == 0] = 0.001
-        if abs_k2.all() == 0: abs_k2[abs_k2 == 0] = 0.001
-        return (((k[:,:2][:,1]-1j*k[:,:2][:,0])/abs_k1) - ((k[:,2:][:,1]+1j*k[:,2:][:,0])/abs_k2))
-
-
-    def J_negpos(F_pp, F_mm, F_pm, F_mp, F_p_pm, p1, p2, position):
-
-        constants = ((jott/sites)**2)/4
-        
-        energy_x = -( (F_pp+F_mm)*(p1 + 2*p2) + (F_p_pm + F_mp)*(p1 - 2*p2) )
-        energy_y = -( (F_pp + F_mm)*(p1-2*p2) - (F_p_pm - F_pm)*(p1 + 2*p2) )
-        energy_z = 4* (F_mp + F_pm)
-
-        return np.array([constants*position*energy_x, constants*position*energy_y, constants*position*energy_z])
-
-    def J_pospos(F_pp, F_mm, F_pm, F_mp, position):
     
-        constants = ((jott/sites)**2)/2
+    # k_old = np.array(np.meshgrid(np.arange(-np.pi, np.pi+2*np.pi/(sites) ,2*np.pi/(sites)),np.arange(-np.pi, np.pi+2*np.pi/(sites) ,2*np.pi/(sites)), np.arange(-np.pi, np.pi+2*np.pi/(sites) ,2*np.pi/(sites)),np.arange(-np.pi, np.pi+2*np.pi/(sites) ,2*np.pi/(sites)))).T.reshape(-1,4)
+    k = np.arange(-np.pi, np.pi ,2*np.pi/(sites))
+    all_F = 0
+    J_all, I_all, D_all, G_all = 0,0,0,0
 
-        energy_x = F_pp + F_mm + F_pm + F_mp
-        energy_y = F_pp + F_mm - F_pm - F_mp
-        energy_z = F_mp - 2* F_pm
-
-        return np.array([constants*position*energy_x, constants*position*energy_y, constants*position*energy_z])
-
-    def gamma_xy(F_pp, F_mm, F_mp, F_pm, p, position):
-
-        constants = ((jott/sites)**2)/4
-        energy = F_pp + F_mm + F_mp + F_pm
-
-        return constants*position*energy*p
-
-    def D_y_pospos(F_pm, F_mp, p, position):
-
-        constants = ((jott/sites)**2)/2
-        energy = F_pm - F_mp 
-
-        return -constants*position*energy*p
-
-    def D_y_negpos(F_pm, F_mp, p, position):
-
-        constants = ((jott/sites)**2)/2
-
-        phase = p.conjugate()
-
-        energy = F_pm - F_mp
-
-        return -constants*position*phase*energy
-    all_F = []
-    D_y, Gamma, J_vec = [], [], []
-
-    # constructing all combinations of k_values for later summation, type: 2d list of length 81, each entry of length 4; type(k_values)=np.ndarray
-    k_values = np.array(np.meshgrid(np.arange(-np.pi, np.pi+2*np.pi/(sites) ,2*np.pi/(sites)),np.arange(-np.pi, np.pi+2*np.pi/(sites) ,2*np.pi/(sites)))).T.reshape(-1,2)
-    
     if compare:
         two_spin = np.array([[[0,1/2,0],[0,1/2,0]],[[0,1/2,0],[0,-1/2,0]]])
         # spin_orientations = [[[1/2,0,0],[1/2,0,0]],[[1/2,0,0],[0,0,1/2]],[[1/2,0,0],[0,0,-1/2]]]
@@ -221,118 +131,130 @@ def main(sites, t, gamma, jott, mu, cps_1, cps_3, distance, compare=True, plotti
         combo = np.array(np.meshgrid(range(angle.shape[0]),range(angle.shape[0]))).T.reshape(-1,2)
         # find all possible ways to combine two spins with all directions allowed by the previous calculated angle combinations
         two_spin = np.unique(np.array([ one_spin[combo[:,0]] , one_spin[combo[:,1]] ]), axis=1) #shape = (2, possible directions **2, 3)
-    
-        spin_orientations = np.array([[[0,1/2,0],[0,1/2,0]], [[1/2,0,0],[1/2,0,0]], [[0,-1/2,0],[0,1/2,0]], [[-1/2,0,0],[1/2,0,0]], [[0,1/2,0],[0,-1/2,0]], [[1/2,0,0],[-1/2,0,0]], 
-        [[1/2,0,0],[0,1/2,0]], [[0,1/2,0],[1/2,0,0]], [[-1/2,0,0],[0,1/2,0]], [[0,-1/2,0],[1/2,0,0]], [[1/2,0,0],[0,-1/2,0]], [[0,1/2,0],[-1/2,0,0]],
-        [[1/2,0,0],[0,0,1/2]], [[1/2,0,0],[0,0,-1/2]], [[-1/2,0,0],[0,0,1/2]], [[-1/2,0,0],[0,0,-1/2]], [[0,1/2,0],[0,0,1/2]], [[0,-1/2,0],[0,0,1/2]],
-        [[0,1/2,0],[0,0,-1/2]], [[0,-1/2,0],[0,0,-1/2]], [[0,0,1/2],[0,0,1/2]],  [[0,0,-1/2],[0,0,1/2]],  [[0,0,1/2],[0,0,-1/2]],  [[0,0,-1/2],[0,0,-1/2]]])
-    
-
-    #find relative sign of the two spins
-    # a = numpy.array([0, 3, 0, 1, 0, 1, 2, 1, 0, 0, 0, 0, 1, 3, 4])
-    # unique, counts = numpy.unique(a, return_counts=True)
-    all_F = 0
-    k = k_values
-
-    for p in tqdm(range(k_values.shape[0])):
-        k_2 = np.roll(k_values, p, axis=0)
-        ks = np.concatenate((k,k_2),axis=1)
-        # position dependent prefactor for all k_values; right now for 2d; WARNING: might be wrong calculation, because periodicity is not yet seen
-        position_prefactor = position(ks, spin_position[0], spin_position[1])
-        # energy prefactors for all different combinations of helicity that occur in the spin structure, for all k_values
-        energy_pp = F_minus(ks, +1,+1) #np.array(list(map(F_minus, k_values, [+1]*len(ks), [+1]*len(ks))))
-        energy_mm = F_minus(ks, -1, -1)
-        energy_pp_pp = F_minus_pp(ks, +1, +1)
-        energy_mm_pp = F_minus_pp(ks, -1, -1)
-        energy_pm = F_minus(ks, +1, -1)
-        energy_mp = F_minus(ks, -1, +1)
-        energy_pm_pp = F_minus_pp(ks, +1, -1)
-        energy_mp_pp = F_minus_pp(ks, -1, +1)
-        energy_p_pm = F_plus(ks, +1, -1)
-        # phases for all k_values
-        phase1_factor = phase1(ks)
-        phase2_factor = phase2(ks)
-        phase3_factor = phase3(ks)
-
-        J_pospos_result = J_pospos(energy_pp_pp, energy_mm_pp, energy_pm_pp, energy_mp_pp, position_prefactor)
-        J_negpos_result = J_negpos(energy_pp, energy_mm, energy_pm, energy_mp, energy_p_pm, phase1_factor, phase2_factor, position_prefactor)
-        gamma_result = gamma_xy(energy_pp, energy_mm, energy_pm, energy_mp, phase1_factor, position_prefactor)
-        D_y_pospos_result = D_y_pospos(energy_pm_pp, energy_mp_pp, phase3_factor, position_prefactor)
-        D_y_negpos_result = D_y_negpos(energy_pm, energy_mp, phase3_factor, position_prefactor)
-        
-
-        heisenberg = two_spin[0] * two_spin[1] #shape = (3, possible directions **2)
-        dm = two_spin[0][:,2] * two_spin[1][:,0] - two_spin[0][:,0] * two_spin[1][:,2] # shape= (possible directions **2)
-        rest = two_spin[0][:,1] * two_spin[1][:,0] + two_spin[0][:,0]*two_spin[1][:,1] # shape= (possible directions **2)
-
-        if type(all_F) == int:
-            J_vec = sum(J_pospos_result.T) + sum(J_negpos_result.T)
-            D_y = np.array([sum(D_y_negpos_result) + sum(D_y_pospos_result)])
-            Gamma = np.array([sum(gamma_result)])
-            all_F = sum((J_vec * heisenberg).T) + D_y * dm  + Gamma *rest 
             
+
+
+    # for part in [list(i) for i in itertools.product([1,-1],repeat=4)]:
+    #     k_values = np.array([i*k for i in part]).T
+    counter, counter_all = 0, 0
+    # print(k)
+    # print(k.shape[0]**4)
+    for version in tqdm(itertools.product(k,k,k,k)):
+        if counter == 0 and counter_all < k.shape[0]**4: 
+            counter += 1
+            counter_all += 1
+            k_values = np.asarray(version).reshape(1,4)
+        if counter <= 10000 and counter_all < k.shape[0]**4: 
+            counter+=1
+            counter_all += 1
+            k_values = np.append(k_values, np.asanyarray(version).reshape(1,4), axis=0)
         else:
-            # d = D_y * dm
-            # g = Gamma * rest 
-            # j = sum((J_vec*heisenberg).T)
-            all_F = np.append(all_F, sum(((sum(J_pospos_result.T) + sum(J_negpos_result.T)) * heisenberg).T) + (sum(D_y_negpos_result) + sum(D_y_pospos_result)) * dm  + (sum(gamma_result)) *rest, axis=0)
-            J_vec = np.append(J_vec,  sum(J_pospos_result.T) + sum(J_negpos_result.T), axis=0)
-            D_y = np.append(D_y, np.array([sum(D_y_negpos_result) + sum(D_y_pospos_result)]), axis=0)
-            Gamma = np.append(Gamma, np.array([sum(gamma_result)]), axis=0)
-    #print(min(all_F), combo[np.where(all_F == min(all_F))], angle)
+            counter=0
+            counter_all += 1
+            energies = np.array( [ energy(k_values[:,:2], +1), energy(k_values[:,:2], -1) ] )
+            energiesprime = np.array( [ energy(k_values[:,2:], +1), energy(k_values[:,2:], -1) ] )
 
-    if plotting: 
-        
-        labels = [str(row[:3])+ ' '+str(row[3:]) for row in np.concatenate(two_spin, axis=1)]
-    
-        plt.plot(D_y*dm, label=r'$D_y$')
-        plt.plot(sum((J_vec * heisenberg).T), label=r'$J$')
-        plt.plot(Gamma*rest, label=r'$\Gamma$')
-        plt.xticks(range(len(two_spin[0])), labels, rotation=90)
-        plt.legend()
-        plt.grid()
-        plt.tight_layout()
-        parameters = [sites, mu, cps_1, cps_3, gamma, jott, spin_position[0][0], spin_position[1][0]]
-        name = 'JDG_analytical/coefficient_relations'
-        for element in parameters:
-            name += '_'+str(np.round(element,2))
-        name += '.png'
-        plt.savefig(name)
-        plt.show()
-        plt.clf()
-        
-        plt.plot(all_F)
-        plt.xlabel('spin configuration')
-        plt.ylabel('free energy in 1/t')
-        plt.xticks(range(len(two_spin[0])), labels, rotation=90)
-        plt.title('analytical free energy for different spin-orientations of two impurity spins \n for '+str(parameters[0])+r' sites with $U=$'+str(parameters[2])+r' and $V=$'+str(parameters[3])+', J='+str(parameters[5])+r', $\gamma=$'+str(round(parameters[4],2)))
-        plt.tight_layout()
-        plt.grid()
-        name = 'analytical spinstructure/analytical_spinstructure'
-        for element in parameters:
-            name += '_'+str(np.round(element,2))
-        name += '.png'
-        plt.savefig(name)
-        plt.clf()
-        
-        # plt.plot(all_F)
-        # plt.xlabel('spin configuration')
-        # plt.ylabel('free energy in 1/t')
-        # plt.xticks(range(len(spin_orientations)), labels, rotation=45)
-        # plt.title('analytical free energy for different spin-orientations of two impurity spins \n for '+str(parameters[0])+r' sites with $U=$'+str(parameters[2])+r' and $V=$'+str(parameters[3])+', J='+str(parameters[5])+r', $\gamma=$'+str(round(parameters[4],2)))
-        # plt.tight_layout()
-        # plt.grid()
-        # name = 'analytical spinstructure/analytical_spinstructure'
-        # for element in parameters:
-        #     name += '_'+str(np.round(element,2))
-        # name += '.png'
-        # plt.savefig(name)
-        # plt.clf()
+            signs = np.array([[1,1],[1,-1],[-1,1],[-1,-1]])
 
-    return all_F, J_vec, D_y, Gamma, two_spin #spin_orientations
+            a1 = np.array([a(k_values[:,:2], k_values[:,2:], *signs[i,:]) for i in range(4)])
+            a2 = np.array([a(k_values[:,2:], k_values[:,:2], *signs[i,:]) for i in range(4)])
+            a3 = np.array([a(-k_values[:,:2], -k_values[:,2:], *signs[i,:]) for i in range(4)])
+
+            b1 = np.array([b(k_values[:,:2], k_values[:,2:], *signs[i,:]) for i in range(4)])
+            b2 = np.array([b(k_values[:,2:], k_values[:,:2], *signs[i,:]) for i in range(4)])
+            b3 = np.array([b(-k_values[:,:2], -k_values[:,2:], *signs[i,:]) for i in range(4)])
+
+            c1 = np.array([c(k_values[:,:2], k_values[:,2:], *signs[i,:]) for i in range(4)])
+            c2 = np.array([c(k_values[:,2:], k_values[:,:2], *signs[i,:]) for i in range(4)])
+            c3 = np.array([c(-k_values[:,:2], -k_values[:,2:], *signs[i,:]) for i in range(4)])
+
+            d1 = np.array([d(k_values[:,:2], k_values[:,2:], *signs[i,:]) for i in range(4)])
+            d2 = np.array([d(k_values[:,2:], k_values[:,:2], *signs[i,:]) for i in range(4)])
+            d3 = np.array([d(-k_values[:,:2], -k_values[:,2:], *signs[i,:]) for i in range(4)])
+            
+            # E1_ppp = energy1(a1[0], a2[0], b1[0], b2[0], c1[0], c2[0], d1[0], d2[0], energies[0], energiesprime[0]) +  energy1(a1[3], a2[3], b1[3], b2[3], c1[3], c2[3], d1[3], d2[3], energies[1], energiesprime[1]) +  energy1(a1[1], a2[1], b1[1], b2[1], c1[1], c2[1], d1[1], d2[1], energies[0], energiesprime[1]) +  energy1(a1[2], a2[2], b1[2], b2[2], c1[2], c2[2], d1[2], d2[2], energies[1], energiesprime[0])
+            # E1_pmm = energy1(a1[0], a2[0], b1[0], b2[0], c1[0], c2[0], d1[0], d2[0], energies[0], energiesprime[0]) +  energy1(a1[3], a2[3], b1[3], b2[3], c1[3], c2[3], d1[3], d2[3], energies[1], energiesprime[1]) -  energy1(a1[1], a2[1], b1[1], b2[1], c1[1], c2[1], d1[1], d2[1], energies[0], energiesprime[1]) -  energy1(a1[2], a2[2], b1[2], b2[2], c1[2], c2[2], d1[2], d2[2], energies[1], energiesprime[0])
+            # E1_mpm = energy1(a1[0], a2[0], b1[0], b2[0], c1[0], c2[0], d1[0], d2[0], energies[0], energiesprime[0]) -  energy1(a1[3], a2[3], b1[3], b2[3], c1[3], c2[3], d1[3], d2[3], energies[1], energiesprime[1]) +  energy1(a1[1], a2[1], b1[1], b2[1], c1[1], c2[1], d1[1], d2[1], energies[0], energiesprime[1]) -  energy1(a1[2], a2[2], b1[2], b2[2], c1[2], c2[2], d1[2], d2[2], energies[1], energiesprime[0])
+            # E1_mmp = energy1(a1[0], a2[0], b1[0], b2[0], c1[0], c2[0], d1[0], d2[0], energies[0], energiesprime[0]) -  energy1(a1[3], a2[3], b1[3], b2[3], c1[3], c2[3], d1[3], d2[3], energies[1], energiesprime[1]) -  energy1(a1[1], a2[1], b1[1], b2[1], c1[1], c2[1], d1[1], d2[1], energies[0], energiesprime[1]) +  energy1(a1[2], a2[2], b1[2], b2[2], c1[2], c2[2], d1[2], d2[2], energies[1], energiesprime[0])
+            energies = np.array([energies[0], energies[0], energies[1], energies[1]])
+            energiesprime = np.array([energiesprime[0], energiesprime[1], energiesprime[0], energiesprime[1]])
+
+            E1_ppp = np.sum(energy1(a1, a2, b1, b2, c1, c2, d1, d2, energies, energiesprime)*np.array([1,1,1,1]).reshape(4,1),axis=0)
+            E1_pmm = np.sum(energy1(a1, a2, b1, b2, c1, c2, d1, d2, energies, energiesprime)*np.array([1,-1,-1,1]).reshape(4,1),axis=0)
+            E1_mpm = np.sum(energy1(a1, a2, b1, b2, c1, c2, d1, d2, energies, energiesprime)*np.array([1,1,-1,-1]).reshape(4,1),axis=0)
+            E1_mmp = np.sum(energy1(a1, a2, b1, b2, c1, c2, d1, d2, energies, energiesprime)*np.array([1,-1,1,-1]).reshape(4,1),axis=0)
+
+            # E2_ppp = energy2(a1[0], a3[0], b1[0], b3[0], c1[0], c3[0], d1[0], d3[0], energies[0], energiesprime[0]) +  energy2(a1[3], a3[3], b1[3], b3[3], c1[3], c3[3], d1[3], d3[3], energies[1], energiesprime[1]) +  energy2(a1[1], a3[1], b1[1], b3[1], c1[1], c3[1], d1[1], d3[1], energies[0], energiesprime[1]) +  energy2(a1[2], a3[2], b1[2], b3[2], c1[2], c3[2], d1[2], d3[2], energies[1], energiesprime[0])
+            # E2_mpm = energy2(a1[0], a3[0], b1[0], b3[0], c1[0], c3[0], d1[0], d3[0], energies[0], energiesprime[0]) -  energy2(a1[3], a3[3], b1[3], b3[3], c1[3], c3[3], d1[3], d3[3], energies[1], energiesprime[1]) +  energy2(a1[1], a3[1], b1[1], b3[1], c1[1], c3[1], d1[1], d3[1], energies[0], energiesprime[1]) -  energy2(a1[2], a3[2], b1[2], b3[2], c1[2], c3[2], d1[2], d3[2], energies[1], energiesprime[0])
+            # E2_mmp = energy2(a1[0], a3[0], b1[0], b3[0], c1[0], c3[0], d1[0], d3[0], energies[0], energiesprime[0]) -  energy2(a1[3], a3[3], b1[3], b3[3], c1[3], c3[3], d1[3], d3[3], energies[1], energiesprime[1]) -  energy2(a1[1], a3[1], b1[1], b3[1], c1[1], c3[1], d1[1], d3[1], energies[0], energiesprime[1]) +  energy2(a1[2], a3[2], b1[2], b3[2], c1[2], c3[2], d1[2], d3[2], energies[1], energiesprime[0])
+
+            E2_ppp = np.sum(energy2(a1, a3, b1, b3, c1, c3, d1, d3, energies, energiesprime)*np.array([1,1,1,1]).reshape(4,1),axis=0)
+            E2_mpm = np.sum(energy2(a1, a3, b1, b3, c1, c3, d1, d3, energies, energiesprime)*np.array([1,1,-1,-1]).reshape(4,1),axis=0)
+            E2_mmp = np.sum(energy2(a1, a3, b1, b3, c1, c3, d1, d3, energies, energiesprime)*np.array([1,-1,1,-1]).reshape(4,1),axis=0)
+
+            #calculate phases
+            phi1 = (-k_values[:,1] + 1j* k_values[:,0])/np.sqrt(k_values[:,1]**2 + k_values[:,0]**2)
+            phi1prime = (-k_values[:,3] + 1j* k_values[:,2])/np.sqrt(k_values[:,3]**2 + k_values[:,2]**2)
+            phi2 = (-k_values[:,3] + 1j* k_values[:,2])/np.sqrt(k_values[:,3]**2 + k_values[:,2]**2) * (-k_values[:,1] - 1j* k_values[:,0])/np.sqrt(k_values[:,1]**2 + k_values[:,0]**2)
+            mplus= phi1prime * phi1
+            mminus = np.conj(mplus)
+
+            #calculate e-function contribution
+            position_prefactor = position(k_values, spin_position[0], spin_position[1])
+
+            #calculate spin structure components and add to result from previous iterations to get sum over entire k-space
+            J_all += sum(2*E1_ppp*position_prefactor)
+            ising = I(mplus, mminus, phi1, phi1prime)*position_prefactor
+            I_all += sum((ising[0]*E1_pmm + ising[1]*E2_ppp).T)
+            dm = D(k_values)*position_prefactor
+            D_all += sum((dm[:,0]* E1_mpm + dm[:,1] * E1_mmp).T) 
+
+            tensor = Gamma(phi1, phi1prime, phi2, mplus, mminus)*position_prefactor
+            tensor = np.array([np.zeros(E2_ppp.shape[0]),tensor[0][0]*E2_ppp + tensor[0][1]*E1_pmm, np.zeros(E2_ppp.shape[0]),tensor[1][0]*E2_ppp + tensor[1][1]*E1_pmm, np.zeros(E2_ppp.shape[0]), tensor[2][0]*E2_mpm + tensor[2][1]*E2_mmp, tensor[3][0]*E2_mpm + tensor[3][1]*E2_mmp, tensor[4][0]*E2_mpm + tensor[4][1]*E2_mmp, np.zeros(E2_ppp.shape[0])])
+            G_all += sum(tensor.T).reshape(3,3)
+
+    # calculate the different spin factors, direct product, cross product and tensor product
+    scalar = two_spin[0] * two_spin[1] #shape = (possible directions **2,3)
+    cross = np.cross(two_spin[0], two_spin[1]) # shape= (possible directions **2, 3)
+    #calculate tensor product of the two spins to get all 9 combinations of their components, for all possible configurations
+    complete = np.array([np.zeros(two_spin.shape[1]),two_spin[0,:,0]* two_spin[1,:,1], np.zeros(two_spin.shape[1]), two_spin[0,:,1]* two_spin[1,:,0],np.zeros(two_spin.shape[1]), two_spin[0,:,1]* two_spin[1,:,2], two_spin[0,:,2]* two_spin[1,:,0], two_spin[0,:,2]* two_spin[1,:,1], np.zeros(two_spin.shape[1])])# shape=
+    complete = complete.reshape(complete.shape[1],3,3) # shape=(possible directions ** 2, 3,3)
+
+    # multiply coefficients with spin combinations for all possible configurations, shape = (possible config,)
+    heisenberg_s = sum((J_all*scalar).T)
+    ising_s = sum((I_all * scalar).T)
+    dm_s = sum((D_all*cross).T)
+    tensor_s = np.einsum('ij,...ij', G_all, complete)
+
+    # final free energy is sum of all terms
+    # DO I NEED THE MINUS SIGN?
+    all_F += -(jott/sites)**2*(heisenberg_s + ising_s + dm_s + tensor_s)
+
+    return all_F, [-(jott/sites)**2*J_all, -(jott/sites)**2*I_all, -(jott/sites)**2*D_all, -(jott/sites)**2*G_all], two_spin
 
 if __name__ == '__main__':
     start = timer.time()
+    result, result_coeffi = [], []
 
-    result = main(300, 1, 0.2, 2, 1, 0.01, 0.05, 2, compare=False, plotting=True)
-    print('total duration ', round(timer.time()-start, 4))
+    x = list(range(2,32))
+
+    for distance in x:
+        # sites, t, gamma, jott, mu, cps_1, cps_3, distance
+        output = main(35, 1, 0.1, 2, 1, 0.01, 0.3, distance, compare=False, plotting=True)
+        result += [output[0]]
+        result_coeffi += [output[1]]
+        spins = output[-1]
+    
+    spins = spins.reshape(spins.shape[1], 2, 3)
+    
+    y = [min(element) for element in result]
+    gs = [np.where(element == min(element))[0][0] for element in result]
+    
+    
+    savedict = {'gs': gs, 'dis':x, 'spin':spins[gs]}
+    sio.savemat('gs_data_ana_35_1_0.1_2_1_0.01_0.3.mat', savedict)
+
+    dump(gs, 'analytical gs/gs_gs_ana_35_1_0.1_2_1_0.01_0.3.txt')
+    dump(x, 'analytical gs/gs_dis_ana_35_1_0.1_2_1_0.01_0.3.txt')
+
+    dump(result_coeffi, 'analytical gs/coeffi_ana_35_1_0.1_2_1_0.01_0.3.txt', compress=2)
