@@ -7,25 +7,25 @@ if __name__ == '__main__':
     ## get arguments from terminal / program call
     parser = argparse.ArgumentParser(description='Coefficients of effective spin-structure for unconventional superconductor')
 
-    # parser.add_argument('sites_x', metavar='N_x', type=int, help='number of sites ') 
-    # parser.add_argument('chemical', metavar='mu', type=float, help='chemical potential') 
-    # parser.add_argument('attract', metavar='delta', type=float, help='electron pair interaction strength - singlet') 
-    # parser.add_argument('tri', metavar='delta_tri', type=float, help='electron pair interaction strength - triplet') 
-    # parser.add_argument('soc', metavar='gamma', type=float, help='spin-orbit-coupling strength') 
+    parser.add_argument('sites_x', metavar='N_x', type=int, help='number of sites ') 
+    parser.add_argument('chemical', metavar='mu', type=float, help='chemical potential') 
+    parser.add_argument('attract', metavar='delta', type=float, help='electron pair interaction strength - singlet') 
+    parser.add_argument('tri', metavar='delta_tri', type=float, help='electron pair interaction strength - triplet') 
+    parser.add_argument('soc', metavar='gamma', type=float, help='spin-orbit-coupling strength') 
     
-    # args = parser.parse_args()
+    args = parser.parse_args()
 
-    # ## set constants 
-    # N = args.sites_x
-    # mu = -args.chemical
-    # t = 1
-    # gamma = args.soc
-    # cps_1 = args.attract
-    # cps_3 = args.tri
-    N, mu, t, gamma, cps_1, cps_3 = 21, -0.5, 1, 0.1, 0, 0
+    ## set constants 
+    N = args.sites_x
+    mu = -args.chemical
+    t = 1
+    gamma = args.soc
+    cps_1 = args.attract
+    cps_3 = args.tri
+    # N, mu, t, gamma, cps_1, cps_3 = 21, -0.5, 1, 0.1, 0.1, 0.01
     delta = [cps_1/2 + cps_3/2, cps_1/2-cps_3/2]
 
-    beta = 100
+    beta = 10
 
     # contructing array with all possible combinations of (-pi/N,..., pi/N) for a 2d vector
     kvalues = np.array(np.meshgrid(np.arange(-np.pi,np.pi-np.pi/N,np.pi/N),np.arange(-np.pi,np.pi-np.pi/N,np.pi/N))).T.reshape(-1,2)
@@ -56,7 +56,7 @@ if __name__ == '__main__':
         if heli > 0: index = 0
         else: index = heli
         res = np.sqrt((E(k,heli) + (xi(k, heli)))**2 + abs(delta[index])**2)
-        res[res == 0] = 0.0001
+        # res[res == 0] = 0.0001
         return res
     
     ## components of eigenvectors aka. transformation coefficients
@@ -79,10 +79,10 @@ if __name__ == '__main__':
     
     # Dzyaloshinski-Moriya
     def DM(k1, k2, phi1, phi1prime, phi2):
-        k1n = np.sqrt(k1[:,0]**2 + k1[:,1]**2)
-        k2n = np.sqrt(k2[:,0]**2 + k2[:,1]**2)
-        x = np.array([ np.zeros(phi2.shape[0]) + 2j*k1[:,1]/k1n,  -1j*k2[:,1]/k2n, 1j*(phi2*phi1prime+np.conj(phi1)), -1j*(phi2*np.conj(phi1)+phi1prime)])
-        y = np.array([np.zeros(phi2.shape[0]) -2j*k1[:,0]/k1n, -2j*k2[:,0]/k2n, phi2*phi1prime - np.conj(phi1), phi2*np.conj(phi1)-phi1prime] )        
+        # k1n = np.sqrt(k1[:,0]**2 + k1[:,1]**2)
+        # k2n = np.sqrt(k2[:,0]**2 + k2[:,1]**2)
+        x = np.array([ np.zeros(phi2.shape[0]) + 1j*(phi1+np.conj(phi1)),  -1j*(phi1prime+np.conj(phi1prime)), 1j*(phi2*phi1prime+np.conj(phi1)), -1j*(phi2*np.conj(phi1)+phi1prime)])
+        y = np.array([np.zeros(phi2.shape[0]) +np.conj(phi1)-phi1, phi1prime-np.conj(phi1prime), phi2*phi1prime - np.conj(phi1), phi2*np.conj(phi1)-phi1prime] )        
         z = np.zeros(y.shape)
 
         return np.array([x,y,z])
@@ -113,8 +113,8 @@ if __name__ == '__main__':
         energies = np.array([energies[0], energies[0], energies[1], energies[1]])
         energiesprime = np.array([energiesprime[0], energiesprime[1], energiesprime[0], energiesprime[1]])
 
-        neg_energies = np.array([energies[0], energies[0], energies[1], energies[1]])
-        neg_energiesprime = np.array([energiesprime[0], energiesprime[1], energiesprime[0], energiesprime[1]])
+        neg_energies = np.array([neg_energies[0], neg_energies[0], neg_energies[1], neg_energies[1]])
+        neg_energiesprime = np.array([neg_energiesprime[0], neg_energiesprime[1], neg_energiesprime[0], neg_energiesprime[1]])
 
         em = energies - energiesprime
         nem = neg_energies - neg_energiesprime
@@ -126,20 +126,19 @@ if __name__ == '__main__':
         eta_k = np.asarray([eta(k1, +1), eta(k1, +1), eta(k1, -1), eta(k1, -1)])
         eta_kp = np.asarray([eta(kvalues, +1), eta(kvalues, -1), eta(kvalues, +1), eta(kvalues, -1)])
         eta_mk = np.asarray([eta(-k1, +1), eta(-k1, +1), eta(-k1, -1), eta(-k1, -1)])
-        eta_mkp = np.asarray([eta(-kvalues, +1), eta(-kvalues, +1), eta(-kvalues, -1), eta(-kvalues, -1)])
+        eta_mkp = np.asarray([eta(-kvalues, +1), eta(-kvalues, -1), eta(-kvalues, +1), eta(-kvalues, -1)])
 
         nu_k = np.asarray([nu(k1, +1), nu(k1, +1), nu(k1, -1), nu(k1, -1)]) 
         nu_kp = np.asarray([nu(kvalues, +1), nu(kvalues, -1), nu(kvalues, +1), nu(kvalues, -1)])
         nu_mk = np.asarray([nu(-k1, +1), nu(-k1, +1), nu(-k1, -1), nu(-k1, -1)]) 
         nu_mkp = np.asarray([nu(-kvalues, +1), nu(-kvalues, -1), nu(-kvalues, +1), nu(-kvalues, -1)])
 
-         
         ## construct all fermi distribution combinations
-        fe = fermi_dis(np.array([energies[0], energies[0], energies[1], energies[1]]))
-        feprime = fermi_dis(np.array([energiesprime[0], energiesprime[1], energiesprime[0], energiesprime[1]]))
+        fe = fermi_dis(energies)
+        feprime = fermi_dis(energiesprime)
         
-        neg_fe = fermi_dis(np.array([neg_energies[0], neg_energies[0], neg_energies[1], neg_energies[1]]))
-        neg_feprime = fermi_dis(np.array([neg_energiesprime[0], neg_energiesprime[1], neg_energiesprime[0], neg_energiesprime[1]]))
+        neg_fe = fermi_dis(neg_energies)
+        neg_feprime = fermi_dis(neg_energiesprime)
 
         fm = fe - feprime
         fm[em==0] = 0
@@ -149,9 +148,6 @@ if __name__ == '__main__':
 
         npfp = neg_fe + feprime
         pnfp = fe + neg_feprime
-
-        # print('fm ', fm[em==0])
-        # print('nnfm ',nnfm[nem==0])
 
         #make sure to not divied by zero. the terms will end up to be zeros because they are multiplied with zero, too, but python turns them into nan otherwise
         em[em==0] = 0.000001
