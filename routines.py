@@ -4,11 +4,11 @@ import time as timer
 import numpy as np
 import itertools, operator, os
 from joblib import dump, load
-import spinstructure_numbers as analytical
+import ana_compute_coeffies as analytical
 
 from tqdm import tqdm 
 
-def spin_loop(parameters, kvalues, spin_pos, iteration=False):
+def spin_loop(parameters, kvalues, spin_pos, step = 4, iteration=False):
     # parameters = [sites_x, sites_y, mu, cps, tri, gamma, jott, imp1, imp2]
 
     spin = 1/2
@@ -17,7 +17,7 @@ def spin_loop(parameters, kvalues, spin_pos, iteration=False):
         res = np.array([np.round(spin*np.sin(winkel[:,0])*np.cos(winkel[:,1]),5), np.round(spin*np.sin(winkel[:,0])*np.sin(winkel[:,1]),5), np.round(spin*np.cos(winkel[:,0]),5)])
         return res +0
 
-    step = 4 # number of intervals to dicretisize the spherical coordinates
+    #step = 4 is number of intervals to dicretisize the spherical coordinates
     # find all angle combinations for discretisized spherical coordinates
     angle = np.array(np.meshgrid(np.arange(-np.pi, np.pi+np.pi/step, np.pi/step), np.arange(-np.pi, np.pi+np.pi/step, np.pi/step))).T.reshape(-1,2)
     # calculate all possible orientations based on those angle for one spin
@@ -144,11 +144,11 @@ def gap_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
     # gap_studies_1, gap_studies_3, density_study, energies, free_energies, labels = [], [], [], [], [], []
     gap_studies_1, gap_studies_3, density_study, density_study_2, density_study_3, energies, free_energies, labels, labels_2, labels_3 = [], [], [], [], [], [], [], [],[],[]
 
-    site = parameters[0]//2 -1
+    site = 1#parameters[0]//2 -1
     # kvalues = all_kvalues[0]
-    step = 0.1
+    step = 0.4
     
-    for triplet in np.arange(0.3, parameters[4] + step , step):
+    for triplet in np.arange(0, parameters[4] + step , step):
 
         parameters[4] = triplet
 
@@ -168,6 +168,7 @@ def gap_study(parameters, all_kvalues, spin_orientation, spin_positions, iterati
         
         else:
             eigen = load(name)
+            eigen = np.asarray(eigen)
             gap = [[parameters[3]]*parameters[0]*parameters[1], [parameters[4]]*parameters[0]*parameters[1]] 
 
         # def H_coeffi(x):
@@ -346,7 +347,7 @@ def distance(parameters, positive_kvalues, zero_kvalues, index):
     spin = [[[0,1/2,0],[0,1/2,0]],[[0,1/2,0],[0,-1/2,0]]]
     F_difference, F_difference_an = [], []
     #create list with different parameter configurations, changing the parameter given with function call
-    values = np.arange(0,1,0.2)
+    values = np.arange(0,0.7,0.3)
 
     for value in tqdm(values):
         parameters[index] = value
