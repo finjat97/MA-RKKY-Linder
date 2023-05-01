@@ -56,7 +56,7 @@ if __name__ == '__main__':
         if heli > 0: index = 0
         else: index = heli
         res = np.sqrt((E(k,heli) + (xi(k, heli)))**2 + abs(delta[index])**2)
-        # res[res == 0] = 0.0001
+        res[res == 0] = 0.0001
         return res
     
     ## components of eigenvectors aka. transformation coefficients
