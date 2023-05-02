@@ -15,7 +15,7 @@ plot.py simply plots the data from main_RKKY.py in a specific way.
 3d_arrow_plot.py plots the groundstate spin configurations from groundstate.py as 3 dimensional arrows over distance.
 
 ## Schrieffer-Wolff transformation (SWT)
-ana_comp_final.py computes the spinstructure for a normal metal or superconductor with spin orbit coupling based on the anayltically found expression.
+ana_compute2.py computes the spinstructure for a normal metal or superconductor with spin orbit coupling based on the anayltically found expression.
 ana_spin.py plots the groundstate spin configuration based on ana_comp_final.py and plots it as 3 dimensional arrows over distance.
 plot_ana_coeffi.py plots the different coefficients over distance and the y-axis limits can be adjusted.
 ana_nm_sc_compute.py computes the spin structure coefficients for normal metals and superconductors (without spin orbit coupling).
