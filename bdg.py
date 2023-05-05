@@ -18,18 +18,29 @@ def diagonalize_hamiltonian(parameters, spin, positions = [], output=False):
     k_values = np.arange(-np.pi, np.pi ,2*np.pi/(sites_y))
 
     def k_matrices(k_y):
+        
+        # make sure that sine and cosine are within computational accuracy
+        s = np.sin(k_y)
+        if abs(s) < 10**(-13): 
+            s = 0
+        c = np.cos(k_y)
+        if abs(c) < 10**(-13): 
+            c = 0
 
-        diag = np.array([-mu, -2*gamma*np.sin(k_y), 0, np.conj(ds), -2*gamma*np.sin(k_y), -mu, - np.conj(ds), 0, 0, -ds, mu, 2*gamma*np.sin(k_y), ds, 0, 2*gamma*np.sin(k_y), mu]).reshape(4,4)
-        # off_diag = np.array( [-2*hopping*np.cos(k_y), -gamma, 2*np.cos(k_y)*dtu,0,gamma, -2*hopping*np.cos(k_y), 0, 2*np.cos(k_y)*np.conj(dtd), -2*np.cos(k_y)*np.conj(dtu), 0, 2*hopping*np.cos(k_y), gamma, 0, -2*np.cos(k_y)*dtd, - gamma, 2*hopping*np.cos(k_y)] ).reshape(4,4)
-        off_diag = np.array( [-2*hopping*np.cos(k_y), -gamma, 2*dtu,0,gamma, -2*hopping*np.cos(k_y), 0, 2*np.conj(dtd), -2*np.conj(dtu), 0, 2*hopping*np.cos(k_y), gamma, 0, -2*dtd, - gamma, 2*hopping*np.cos(k_y)] ).reshape(4,4)
+        # construct blocks of final Hamiltonian
+        diag = np.array([-mu, -2*gamma*s, 0, np.conj(ds), -2*gamma*s, -mu, - np.conj(ds), 0, 0, -ds, mu, 2*gamma*s, ds, 0, 2*gamma*s, mu]).reshape(4,4)
+        off_diag = np.array( [-2*hopping*c, -gamma, 2*c*dtu,0,gamma, -2*hopping*c, 0, 2*c*np.conj(dtd), -2*c*np.conj(dtu), 0, 2*hopping*c, gamma, 0, -2*c*dtd, - gamma, 2*hopping*c] ).reshape(4,4)
 
+        # create empty total matrix
         matrix = np.zeros((sites_x*4, sites_x*4), dtype='complex128')
 
+        # fill matrix with correct blocks
         for i in np.arange(0,sites_x*4,4):
             matrix[i:i+4, i:i+4] = diag
             if i < (sites_x-1)*4 :
                 matrix[i:i+4, i+4:i+8] = off_diag
                 matrix[ i+4:i+8,i:i+4] = np.conj(off_diag.T)
+            # add RKKY term at the impurity positions
             if i//4 in position:
                 current_spin = spin[position.index(i//4)%2]
                 data = np.asarray([rkky*current_spin[2], (rkky*current_spin[0]-1j*rkky*current_spin[1]), (rkky*current_spin[0]+1j*rkky*current_spin[1]), -rkky*current_spin[2]]).reshape(2,2)
@@ -37,6 +48,7 @@ def diagonalize_hamiltonian(parameters, spin, positions = [], output=False):
                 matrix[i:i+2, i:i+2] = data
                 matrix[i+2:i+4, i+2:i+4] = -data
         
+        # diagonalize matrix and sort data into dsired output-format
         k_eig = np.linalg.eigh(matrix)
         eigvec = np.array(k_eig[1])
         eigval = k_eig[0].reshape(4*sites_x,1)
@@ -48,8 +60,6 @@ def diagonalize_hamiltonian(parameters, spin, positions = [], output=False):
     eigen = np.array(list(map(k_matrices, k_values)))
 
     return eigen
-
-# out = diagonalize_hamiltonian([81,81,0.5,0.1, 0.01, 0.2, 2, 2, 12], [[0,1/2,0], [0,1/2,0]])
 
 def operator_coefficients(diagonal, k):
     
