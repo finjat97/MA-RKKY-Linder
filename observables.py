@@ -35,7 +35,6 @@ def density_of_states(eigen, coefficients, position, kvalues, output=False):
     # def dp(y):
     #     return [delta_function(x) for x in np.add(energy, eigen[y][0][np.add(eigenvalues, offset)])] 
 
-
     u_up, u_down, v_up, v_down = coefficients
     u_up = np.absolute(np.square(u_up[:,:,site]) )
     u_down = np.absolute(np.square(u_down[:,:,site] ))
@@ -82,7 +81,7 @@ def density_of_states(eigen, coefficients, position, kvalues, output=False):
 def selfconsistency_gap(eigen, potential, coefficients, kvalues):
     #potential is interaction strength of electrons, format: [singlet potential, triplet potential]
     gap_singlet, gap_triplet_up, gap_triplet_down, gap_triplet, gap_triplet_ud, gap_triplet_du = [], [], [], [], [], [] #, gap_triplet_left , []
-
+    print(coefficients.shape)
     # going through all sites in x-direction
     for site in range(len(eigen[0][0])//4):
         ## singlet gap
@@ -169,41 +168,24 @@ def selfconsistency_gap(eigen, potential, coefficients, kvalues):
 
 def free_energy(eigen, kvalues, output=False):
     beta = 100 #1/k_b T
+    # extract eigenvalues from eigen data
     eigvals = eigen[:,:,0]
-    # print(eigvals.shape)
-    eigvals = eigvals[eigvals.shape[0]//2:,:]
-    # print(eigvals.shape)
-    #print(kvalues[0])
-    # eigvals_posk = eigvals[kvalues[0]]
-    # sum_posk = sum( sum ( -1/2 * eigvals_posk - 1/beta * np.log( 1+ np.exp(-beta*eigvals_posk)) ))
-    # eigvals_zerok = eigvals[kvalues[1]]
 
-    # sum_zerok = sum (sum( -1/2 * eigvals_zerok - 1/beta * np.log( 1+ np.exp(-beta*eigvals_zerok)) ) )
-
-    # print(sum_zerok)
-    F = sum( sum ( -1/2 * eigvals - 1/beta * np.log( 1+ np.exp(-beta*eigvals)) ))
+    # extract eigenvalues that are part of the sum
+    eigvals_pos = eigvals[kvalues[0]]
+    eigvals_neg = eigvals[kvalues[1]]
+    eigvals_neg = eigvals_neg[eigvals_neg>=0]
     
-    # # find all combinations of k values and eigenvalue indices
-    # args_p = np.array(np.meshgrid(kvalues[0], list(range(len(eigen[0][0]))))).T.reshape(-1,2)
-    # args_0 = np.array(np.meshgrid(kvalues[1], list(range(len(eigen[0][0]))))).T.reshape(-1,2)
-    # # make sure to only consider positive energies
-    # args_0 = [item for item in args_0 if eigen[args_0[0][0]][0][args_0[0][1]]>0]
-    # # how to calculate the energy
-    # def energy(x):
-    #     return (- eigen[x[0]][0][x[1]])/ 2 - (np.log(1+np.exp(-beta*eigen[x[0]][0][x[1]])))/beta
-    # # calculate free energy
-    # free_energy = sum(map(energy, args_p)) + sum(map(energy, args_0))
+    # sum over all eigenvalues belonging to positive k values
+    product_p = -1/2 * eigvals_pos - 1/beta * np.log( 1+ np.exp(-beta*eigvals_pos))
+    F = sum( sum ( product_p ))
 
-    # for k in kvalues[0]: #all positive k-values
-    #     # going through all eigenvalues
-    #     for eigenvalue in range(len(eigen[0][0])):
-    #         summand1 += (- eigen[k][0][eigenvalue])/ 2 - (np.log(1+np.exp(-beta*eigen[k][0][eigenvalue])))/beta
+    #sum over all eigenvalues belonging to negative k values that have positive eigenvalues
+    product_n = -1/2 * eigvals_neg - 1/beta * np.log( 1+ np.exp(-beta*eigvals_neg))
+    F += sum ( product_n )
+
+    # print(F.shape)
     
-    # for k in kvalues[1]: #all k == 0
-    #     for value in range(len(eigen[0][0])):
-    #         # selecting only positive eigen-energies
-    #         if eigen[k][0][value] > 0: 
-    #             summand2 += -(eigen[k][0][eigenvalue])/2 - (np.log(1+np.exp(-beta*eigen[k][0][eigenvalue])))/beta 
     if output:
         print('__free energy__\n', round(free_energy,3))
 
