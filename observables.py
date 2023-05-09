@@ -170,24 +170,16 @@ def free_energy(eigen, kvalues, output=False):
     beta = 100 #1/k_b T
     # extract eigenvalues from eigen data
     eigvals = eigen[:,:,0]
-
-    # extract eigenvalues that are part of the sum
-    eigvals_pos = eigvals[kvalues[0]]
-    eigvals_neg = eigvals[kvalues[1]]
-    eigvals_neg = eigvals_neg[eigvals_neg>=0]
+    # extract only positive eigenvalues
+    eigvals = eigvals[eigvals>0]
     
-    # sum over all eigenvalues belonging to positive k values
-    product_p = -1/2 * eigvals_pos - 1/beta * np.log( 1+ np.exp(-beta*eigvals_pos))
-    F = sum( sum ( product_p ))
-
-    #sum over all eigenvalues belonging to negative k values that have positive eigenvalues
-    product_n = -1/2 * eigvals_neg - 1/beta * np.log( 1+ np.exp(-beta*eigvals_neg))
-    F += sum ( product_n )
+    product = -1/2 * eigvals - 1/beta * np.log( 1+ np.exp(-beta*eigvals))
+    F = sum ( product )
 
     # print(F.shape)
     
     if output:
-        print('__free energy__\n', round(free_energy,3))
+        print('__free energy__\n', round(F,3))
 
     return F
 
